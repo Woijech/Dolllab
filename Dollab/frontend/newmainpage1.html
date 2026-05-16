@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900;1000&display=swap" rel="stylesheet">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Dollab</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="icon" type="image/png" href="/icons/dllogo_small.png">
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="logo-wrapper">
+    <img src="/icons/dllogo_small.png" class="logo" alt="logo" id="logoHome" />
+  </div>
+  <div class="nav">
+    <div class="item active" data-section="home"><img src="/icons/home.svg" alt="home"><span>Главная</span></div>
+    <div class="item" data-section="interesting"><img src="/icons/compass.svg" alt="compass"><span>Интересное</span></div>
+<div class="item" data-section="notifications">
+  <img src="/icons/bell.svg" alt="bell">
+  <span>Уведомления</span>
+  <div class="notification-badge" id="notificationBadge" style="display:none;"></div>
+</div>    <div class="item" data-section="add"><img src="/icons/plus.svg" alt="plus"><span>Создать</span></div>
+    <div class="item" data-section="cyclopedia"><img src="/icons/book-heart.svg" alt="book"><span>Куклопедия</span></div>
+    <div class="item" data-section="cart"><img src="/icons/shop.svg" alt="cart"><span>Магазин</span></div>
+  </div>
+  <div class="settings">
+    <img src="/icons/settings.svg" alt="settings">
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-left"></div>
+    <div class="search-wrapper">
+      <div class="search">
+        <img src="/icons/search.svg" alt="search" id="searchIcon" />
+        <input type="text" id="searchInput" placeholder="Поиск в куклопедии"/>
+        <img src="/icons/cross.svg" alt="clear" id="clearIcon" />
+      </div>
+    </div>
+
+  <div class="user-search-wrapper" style="display: none;">
+    <div class="search">
+      <img src="/icons/search.svg" alt="search" id="userSearchIcon" />
+      <input type="text" id="userSearchInput" placeholder="Поиск пользователей"/>
+      <img src="/icons/cross.svg" alt="clear" id="userClearIcon" />
+    </div>
+  </div>
+
+    <div class="topbar-right">
+<div class="shop-categories-roof" id="shopCategoriesRoof" style="display:none;">
+  <div class="shop-categories-label">Категории</div>
+
+  <div class="shop-categories-dropdown" id="shopCategoriesDropdown">
+    <div class="shop-category-item">Загрузка...</div>
+  </div>
+</div>
+      <img src="/icons/cart.svg" class="topbar-cart-icon" id="topbarCartIcon" style="display:none;" alt="Корзина">
+      <img src="/icons/blank_pfp.jpg" class="avatar" alt="avatar" id="profileAvatar"/>
+    </div>
+  </div>
+
+  <div class="filters">
+    <div class="filter-dropdown">
+      <select class="filter-select" id="brandFilter"><option value="">Все бренды</option></select>
+      <div class="dropdown-arrow">▼</div>
+    </div>
+    <div class="filter-dropdown">
+      <select class="filter-select" id="yearFilter"><option value="">Все годы</option></select>
+      <div class="dropdown-arrow">▼</div>
+    </div>
+  </div>
+
+  <div class="content" id="contentArea">
+    <div class="dolls-grid" id="dollsGrid"></div>
+  </div>
+
+  <div class="modal hidden" id="dollModal">
+    <div class="modal-overlay"></div>
+    <div class="modal-content">
+      <img src="/icons/cross.svg" class="modal-close-icon" alt="Закрыть" id="closeModal" />
+      <div class="modal-image"><img id="modalImage" src="" alt="Кукла"></div>
+      <div class="modal-info">
+        <h2 id="modalName"></h2>
+        <p><strong>Бренд:</strong> <span id="modalBrand"></span></p>
+        <p><strong>Серия:</strong> <span id="modalSeries"></span></p>
+        <p><strong>Год выпуска:</strong> <span id="modalYear"></span></p>
+        <p class="modal-description" id="modalDescription"></p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="profile.js"></script>
+<script src="post.js"></script>
+<script src="main.js"></script>
+<script src="app.js"></script>
+<script src="shop.js"></script>
+<script src="notifications.js"></script>
+<script src="settings.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вход | dollab</title>
+    
+    <!-- Подключаем шрифт Montserrat с Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lobster&display=swap" rel="stylesheet">
+
+  <script src="app1.js"></script>
+    <style>
+        /* Сброс стилей по умолчанию */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        /* Основные стили страницы */
+        body {
+            font-family: 'Pacifio';
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* Градиентный фон - слой 1 (исходный) */
+        .bg-gradient {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, #ffd1e9 0%, #ffffff 90%);
+            z-index: -1;
+            opacity: 1;
+            transition: opacity 0.5s ease;
+        }
+        
+        /* Градиентный фон - слой 2 (инвертированный) */
+        .bg-gradient.inverted {
+            background: radial-gradient(circle, #ffffff 0%, #ffd1e9 90%);
+            opacity: 0;
+        }
+        
+        /* Когда активен инвертированный фон */
+        body.register-mode .bg-gradient:first-child {
+            opacity: 0;
+        }
+        
+        body.register-mode .bg-gradient.inverted {
+            opacity: 1;
+        }
+        
+        /* Главный контейнер */
+        .login-container {
+            width: 100%;
+            max-width: 1000px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+        
+        /* Заголовок */
+        .login-header h1 {
+            font-family: Buntera Demo;
+            color: #ff67a6;
+            font-size: 130px;
+            font-weight: 10;
+            margin-bottom: 20px;
+            margin-top: 40px;
+            letter-spacing: 0px;
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+        
+        /* Формы */
+        .login-form, .register-form {
+            background: #ffffff00;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        /* Исходная форма входа видна, форма регистрации скрыта */
+        .login-form {
+            opacity: 1;
+        }
+        
+        .register-form {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        /* Классы для анимации перехода */
+        .login-form.hiding {
+            opacity: 0;
+            transform: translateX(-50%) translateY(-20px);
+            pointer-events: none;
+        }
+        
+        .register-form.showing {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+            pointer-events: all;
+        }
+        
+        /* Контейнер для полей ввода */
+        .input-group {
+            margin-bottom: 30px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        /* Стили для полей ввода */
+        .form-input {
+            width: 450px;
+            height: 55px;
+            padding: 0 30px;
+            border-radius: 30px;
+            border: 1px solid #ff67a6;
+            font-family: "Lobster";
+            font-size: 25px;
+            color: #ff8abb;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+            display: block;
+        }
+        
+        /* Контейнер для поля пароля с иконкой */
+        .password-wrapper {
+            position: relative;
+            width: 450px;
+            margin-top: 20px;
+        }
+        
+        /* Стиль для поля пароля внутри контейнера */
+        .password-wrapper .form-input {
+            width: 100%;
+            margin: 0;
+            padding-right: 60px;
+        }
+        
+        /* Иконка "глазика" */
+        .toggle-password {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #ff67a6;
+            font-size: 24px;
+            transition: all 0.3s ease;
+            user-select: none;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .toggle-password:hover {
+            color: #f73385;
+            transform: translateY(-50%) scale(1.1);
+        }
+        
+        /* Иконки SVG */
+        .eye-icon,
+        .eye-slash-icon {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
+        
+        /* Скрываем иконку по умолчанию */
+        .eye-slash-icon {
+            display: none;
+        }
+        
+        /* Когда пароль видим, меняем иконки */
+        .password-wrapper.show-password .eye-icon {
+            display: none;
+        }
+        
+        .password-wrapper.show-password .eye-slash-icon {
+            display: block;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #ffffff;
+        }
+        
+        .form-input::placeholder {
+            color: #ffbcd8;
+        }
+        
+        /* Ссылка "Забыли пароль?" */
+        .forgot-password {
+            display: inline-block;
+            margin-top: 10px;
+            margin-bottom: 20px;
+            color: #ff67a6;
+            font-family: "Lobster";
+            font-size: 18px;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            max-width: 450px;
+            width: 100%;
+            text-align: center;
+            padding-right: 15px;
+        }
+        
+        .forgot-password:hover {
+            color: #f73385;
+            transform: translateY(-1px);
+        }
+        
+        .forgot-password:active {
+            transform: translateY(0);
+        }
+        
+        /* Стили для кнопок */
+        .btn {
+            width: 100%;
+            max-width: 300px;
+            height: 55px;
+            border-radius: 30px;
+            font-family: "Lobster";
+            font-weight: 1;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: block;
+        }
+        
+        /* Кнопка "Войти" и "Зарегистрироваться" */
+        .btn-login, .btn-register {
+            background-color: #ff67a6;
+            color: #ffffff;
+            border: none;
+            margin-bottom: 15px;
+            margin-top: 10px;
+            font-size: 30px;
+        }
+        
+        .btn-login:hover, .btn-register:hover {
+            background-color: #f73385;
+            transform: translateY(-2px);
+        }
+        
+        .btn-login:active, .btn-register:active {
+            transform: translateY(0);
+        }
+        
+        /* Кнопка "Создать новый аккаунт" и "Вернуться ко входу" */
+        .btn-signup, .btn-back {
+            background-color: transparent;
+            color: #ff67a6;
+            font-size: 25px;
+            border: 2px solid #ff67a6;
+        }
+        
+        .btn-signup:hover, .btn-back:hover {
+            background-color: #f7338524;
+            transform: translateY(-2px);
+        }
+        
+        .btn-signup:active, .btn-back:active {
+            transform: translateY(0);
+        }
+        
+        /* Фокус для доступности */
+        .btn:focus,
+        .form-input:focus {
+            outline: 2px solid #ff67a6;
+            outline-offset: 2px;
+        }
+        
+        /* Адаптивность для мобильных устройств */
+        @media (max-width: 768px) {
+            .login-header h1 {
+                font-size: 80px;
+            }
+            
+            .login-form, .register-form {
+                padding: 30px 20px;
+            }
+            
+            .form-input,
+            .btn,
+            .forgot-password,
+            .password-wrapper {
+                max-width: 100%;
+                width: 100%;
+            }
+            
+            .password-wrapper {
+                width: 100%;
+            }
+            
+            .forgot-password {
+                padding-right: 10px;
+                font-size: 16px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            
+            .login-header h1 {
+                font-size: 60px;
+                margin-bottom: 20px;
+                margin-top: 20px;
+            }
+            
+            .login-form, .register-form {
+                padding: 20px 15px;
+            }
+            
+            .form-input {
+                font-size: 18px;
+                height: 45px;
+            }
+            
+            .toggle-password {
+                font-size: 20px;
+                right: 15px;
+            }
+            
+            .btn {
+                font-size: 20px;
+                height: 45px;
+            }
+            
+            .btn-login, .btn-register {
+                font-size: 22px;
+            }
+            
+            .btn-signup, .btn-back {
+                font-size: 20px;
+            }
+            
+            .forgot-password {
+                font-size: 15px;
+                margin-top: 8px;
+                margin-bottom: 15px;
+            }
+        }
+        
+        @media (max-width: 360px) {
+            .login-header h1 {
+                font-size: 50px;
+            }
+            
+            .login-form, .register-form {
+                padding: 15px 10px;
+            }
+            
+            .forgot-password {
+                font-size: 14px;
+            }
+        }
+        
+        /* Легкая анимация для появления формы */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .login-form, .register-form {
+            animation: fadeIn 0.5s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <!-- Два слоя градиентного фона для плавного перехода -->
+    <div class="bg-gradient"></div>
+    <div class="bg-gradient inverted"></div>
+    
+    <div class="login-container">
+        <!-- Заголовок страницы -->
+        <header class="login-header">
+            <h1 id="mainTitle">Welcome to Dollab</h1>
+        </header>
+        
+        <!-- Основная форма входа -->
+        <main style="position: relative; width: 100%; height: 500px;">
+            <form class="login-form" id="loginForm">
+                <div class="input-group">
+                    <!-- Поле для имени пользователя или email -->
+                    <input 
+                        type="text" 
+                        class="form-input" 
+                        id="login-username"
+                        placeholder="Имя пользователя или email" 
+                        aria-label="Имя пользователя или email"
+                        required
+                    >
+                    
+                    <!-- Поле для пароля с иконкой -->
+                    <div class="password-wrapper" id="passwordWrapper">
+                        <input 
+                            type="password" 
+                            class="form-input" 
+                            id="login-password"
+                            placeholder="Пароль" 
+                            aria-label="Пароль"
+                            required
+                        >
+                        <span class="toggle-password" id="togglePassword" aria-label="Показать пароль" role="button" tabindex="0">
+                            <!-- Иконка открытого глаза (видимый пароль) -->
+                            <svg class="eye-icon" viewBox="0 0 24 24">
+                                <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+                            </svg>
+                            <!-- Иконка закрытого глаза (скрытый пароль) -->
+                            <svg class="eye-slash-icon" viewBox="0 0 24 24">
+                                <path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"/>
+                            </svg>
+                        </span>
+                    </div>
+                    
+                    <!-- Ссылка "Забыли пароль?" -->
+                    <a href="#" class="forgot-password" id="forgotPassword" onclick="forgotPassword(); return false;">
+                        Забыли пароль?
+                    </a>
+                </div>
+                
+                <!-- Кнопка входа -->
+                <button type="button" class="btn btn-login" onclick="login()" aria-label="Войти в аккаунт">
+                    Войти
+                </button>
+                
+                <!-- Кнопка создания нового аккаунта -->
+                <button type="button" class="btn btn-signup" onclick="showRegisterForm()" aria-label="Создать новый аккаунт">
+                    Создать новый аккаунт
+                </button>
+            </form>
+            
+            <!-- Форма регистрации (изначально скрыта) -->
+            <form class="register-form" id="registerForm">
+                <div class="input-group">
+                    <!-- Поле для логина -->
+                    <input 
+                        type="text" 
+                        class="form-input" 
+                        id="username"
+                        placeholder="Логин" 
+                        aria-label="Логин"
+                        required
+                    >
+                    
+                    <!-- Поле для email -->
+                    <input 
+                        type="email" 
+                        class="form-input" 
+                        id="email"
+                        placeholder="Email" 
+                        aria-label="Email"
+                        required
+                    >
+                    
+                    <!-- Поле для пароля с иконкой -->
+                    <div class="password-wrapper" id="registerPasswordWrapper">
+                        <input 
+                            type="password" 
+                            class="form-input" 
+                            id="password"
+                            placeholder="Пароль" 
+                            aria-label="Пароль"
+                            required
+                        >
+                        <span class="toggle-password" id="toggleRegisterPassword" aria-label="Показать пароль" role="button" tabindex="0">
+                            <!-- Иконка открытого глаза (видимый пароль) -->
+                            <svg class="eye-icon" viewBox="0 0 24 24">
+                                <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+                            </svg>
+                            <!-- Иконка закрытого глаза (скрытый пароль) -->
+                            <svg class="eye-slash-icon" viewBox="0 0 24 24">
+                                <path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"/>
+                            </svg>
+                        </span>
+                    </div>
+                    
+                    <!-- Невидимая ссылка для сохранения расположения (заменяет "Забыли пароль?") -->
+                    <div class="forgot-password" style="visibility: hidden; height: 18px;">
+                        &nbsp;
+                    </div>
+                </div>
+                
+                <!-- Кнопка регистрации -->
+                <button type="button" class="btn btn-register" onclick="register()" aria-label="Зарегистрироваться">
+                    Зарегистрироваться
+                </button>
+                
+                <!-- Кнопка возврата ко входу -->
+                <button type="button" class="btn btn-back" onclick="showLoginForm()" aria-label="Вернуться ко входу">
+                    Вернуться ко входу
+                </button>
+            </form>
+        </main>
+    </div>
+
+    <script>
+        // Функция для переключения видимости пароля (для формы регистрации)
+        function toggleRegisterPasswordVisibility() {
+            const passwordWrapper = document.getElementById('registerPasswordWrapper');
+            const passwordInput = document.getElementById('password');
+            const toggleButton = document.getElementById('toggleRegisterPassword');
+            
+            if (!passwordWrapper || !passwordInput || !toggleButton) {
+                console.error('Элементы для переключения пароля в форме регистрации не найдены');
+                return;
+            }
+            
+            if (passwordWrapper.classList.contains('show-password')) {
+                // Скрываем пароль
+                passwordInput.type = 'password';
+                passwordWrapper.classList.remove('show-password');
+                toggleButton.setAttribute('aria-label', 'Показать пароль');
+            } else {
+                // Показываем пароль
+                passwordInput.type = 'text';
+                passwordWrapper.classList.add('show-password');
+                toggleButton.setAttribute('aria-label', 'Скрыть пароль');
+            }
+        }
+        
+        // Показать форму регистрации
+        function showRegisterForm() {
+            const body = document.body;
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            const mainTitle = document.getElementById('mainTitle');
+            
+            // Изменяем фон (добавляем класс к body)
+            body.classList.add('register-mode');
+            
+            // Изменяем заголовок
+            mainTitle.style.opacity = '0';
+            mainTitle.style.transform = 'translateY(-20px)';
+            
+            // Скрываем форму входа
+            loginForm.classList.add('hiding');
+            
+            // После небольшой паузы показываем форму регистрации
+            setTimeout(() => {
+                mainTitle.textContent = 'Welcome to Dollab';
+                mainTitle.style.opacity = '1';
+                mainTitle.style.transform = 'translateY(0)';
+                
+                // Показываем форму регистрации
+                registerForm.classList.add('showing');
+            }, 400);
+        }
+        
+        // Показать форму входа
+        function showLoginForm() {
+            const body = document.body;
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            const mainTitle = document.getElementById('mainTitle');
+            
+            // Возвращаем исходный фон (убираем класс с body)
+            body.classList.remove('register-mode');
+            
+            // Изменяем заголовок
+            mainTitle.style.opacity = '0';
+            mainTitle.style.transform = 'translateY(-20px)';
+            
+            // Скрываем форму регистрации
+            registerForm.classList.remove('showing');
+            
+            // После небольшой паузы показываем форму входа
+            setTimeout(() => {
+                mainTitle.textContent = 'Welcome to Dollab';
+                mainTitle.style.opacity = '1';
+                mainTitle.style.transform = 'translateY(0)';
+                
+                // Показываем форму входа
+                loginForm.classList.remove('hiding');
+            }, 400);
+        }
+        
+        // Инициализация при загрузке страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggleRegisterPassword = document.getElementById('toggleRegisterPassword');
+            const registerPasswordInput = document.getElementById('password');
+            const registerUsernameInput = document.getElementById('username');
+            const registerEmailInput = document.getElementById('email');
+            
+            // Обработчики для показа/скрытия пароля в форме регистрации
+            if (toggleRegisterPassword) {
+                toggleRegisterPassword.addEventListener('click', toggleRegisterPasswordVisibility);
+                
+                toggleRegisterPassword.addEventListener('keydown', function(event) {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        toggleRegisterPasswordVisibility();
+                    }
+                });
+            }
+            
+            // Обработчик клавиши Enter на полях формы регистрации
+            if (registerUsernameInput) {
+                registerUsernameInput.addEventListener('keydown', function(event) {
+                    if (event.key === 'Enter') {
+                        event.preventDefault();
+                        if (window.register) {
+                            window.register();
+                        }
+                    }
+                });
+            }
+            
+            if (registerEmailInput) {
+                registerEmailInput.addEventListener('keydown', function(event) {
+                    if (event.key === 'Enter') {
+                        event.preventDefault();
+                        if (window.register) {
+                            window.register();
+                        }
+                    }
+                });
+            }
+            
+            if (registerPasswordInput) {
+                registerPasswordInput.addEventListener('keydown', function(event) {
+                    if (event.key === 'Enter') {
+                        event.preventDefault();
+                        if (window.register) {
+                            window.register();
+                        }
+                    }
+                });
+            }
+            
+            // Убедимся, что функция signup существует для кнопки "Создать новый аккаунт"
+            window.signup = showRegisterForm;
+        });
+        
+        // Экспортируем функции для возможного использования
+        window.toggleRegisterPasswordVisibility = toggleRegisterPasswordVisibility;
+        window.showRegisterForm = showRegisterForm;
+        window.showLoginForm = showLoginForm;
+    </script>
+</body>
+</html>

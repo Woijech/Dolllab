@@ -1,0 +1,30 @@
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.vsidx
+
+# Build results
+bin/
+obj/
+[Bb]in/
+[Oo]bj/
+
+# Local editor settings
+.idea/
+.vscode/
+
+# ASP.NET local settings / secrets
+appsettings.Development.json
+
+# Logs
+*.log
+
+# Temporary Office files
+~$*.docx
+~$*.xlsx
+~$*.pptx
+
+# OS files
+.DS_Store
+Thumbs.db
