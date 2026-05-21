@@ -603,62 +603,129 @@ async function renderProfile() {
     description: data.bio || "Описание отсутствует",
     posts: data.postsCount || 0,
     followers: data.followersCount || 0,
-    following: data.followingCount || 0
+    following: data.followingCount || 0,
+    city: data.city || "",
+    contactMethod: data.contactMethod || ""
   };
 
-  const editModalHTML = `
-    <div class="modal" id="editProfileModal">
-      <div class="modal-overlay"></div>
-      <div class="modal-content" style="max-width: 500px;">
-        <img src="/icons/cross.svg" class="modal-close-icon" alt="Закрыть" id="editModalClose">
-        <div style="width: 100%;">
-          <h2 style="color: #FF67A6; margin-bottom: 24px; text-align: center;">Редактировать профиль</h2>
-          
-          <div style="margin-bottom: 20px; text-align: center;">
-            <label style="color: #FF67A6; font-size: 14px; margin-bottom: 12px; display: block;">Фото профиля</label>
-            
-            ${userData.avatar ? `
-              <img src="${userData.avatar}" alt="Аватар" class="avatar-preview" id="avatarPreview">
-            ` : `
-              <div class="avatar-preview" id="avatarPreview" style="background: rgba(255, 103, 166, 0.1); display: flex; align-items: center; justify-content: center;">
-                <img src="/icons/user-placeholder.svg" alt="Пользователь" style="width: 40px; height: 40px; opacity: 0.4;">
-              </div>
-            `}
-            
-            <label for="editAvatar" class="file-upload-btn">
-              Выбрать фото
-            </label>
-            <input type="file" id="editAvatar" accept="image/*" style="display: none;">
-            
-            <div id="fileName" style="margin-top: 8px; color: #FF98C1; font-size: 12px;"></div>
-          </div>
-          
-          <div style="margin-bottom: 20px;">
-  <label style="color: #FF67A6; font-size: 14px; margin-bottom: 8px; display: block;">Имя пользователя</label>
-  <input 
-    id="editUsername" 
-    type="text" 
-    value="${userData.name}"
-    style="width: 100%; padding: 12px; border: 1px solid rgba(255, 103, 166, 0.3); border-radius: 12px; outline: none; color: #FF67A6; font-size: 14px;"
+const editModalHTML = `
+  <div class="modal" id="editProfileModal">
+    <div class="modal-overlay"></div>
+
+    <div class="modal-content edit-profile-modal-content">
+      <img
+        src="/icons/cross.svg"
+        class="modal-close-icon"
+        alt="Закрыть"
+        id="editModalClose"
+      >
+
+      <div class="edit-profile-modal-body">
+
+        <h2 class="edit-profile-title">
+          Редактировать профиль
+        </h2>
+
+        <div class="edit-profile-avatar-section">
+          <label class="edit-profile-label">
+            Фото профиля
+          </label>
+
+          ${
+            userData.avatar
+              ? `
+                <img
+                  src="${userData.avatar}"
+                  alt="Аватар"
+                  class="avatar-preview"
+                  id="avatarPreview"
+                >
+              `
+              : `
+                <div class="avatar-preview avatar-preview-empty" id="avatarPreview">
+                  <img
+                    src="/icons/user-placeholder.svg"
+                    alt="Пользователь"
+                    class="avatar-placeholder-icon"
+                  >
+                </div>
+              `
+          }
+
+          <label for="editAvatar" class="file-upload-btn">
+            Выбрать фото
+          </label>
+
+          <input
+            type="file"
+            id="editAvatar"
+            accept="image/*"
+            class="hidden-file-input"
+          >
+
+          <div id="fileName" class="edit-profile-file-name"></div>
+        </div>
+
+        <div class="edit-profile-field">
+          <label>Имя пользователя</label>
+
+          <input
+            id="editUsername"
+            type="text"
+            value="${userData.name}"
+            class="edit-profile-input"
+          >
+        </div>
+
+<div class="edit-profile-field">
+  <label>Город</label>
+  <input
+    id="editProfileCity"
+    type="text"
+    class="edit-profile-input"
+    placeholder="Например: Минск"
   >
 </div>
-          <div style="margin-bottom: 20px;">
-            <label style="color: #FF67A6; font-size: 14px; margin-bottom: 8px; display: block;">Описание</label>
-            <textarea id="editDescription" rows="4" style="width: 100%; padding: 12px; border: 1px solid rgba(255, 103, 166, 0.3); border-radius: 12px; outline: none; color: #FF67A6; font-size: 14px; resize: vertical;">${userData.description}</textarea>
-          </div>
-          
-          <div style="display: flex; gap: 12px; justify-content: flex-end;">
-            <button class="profile-edit-btn" id="cancelEditBtn">Отмена</button>
-            <button class="file-upload-btn" id="saveEditBtn">Сохранить</button>
-          </div>
+
+<div class="edit-profile-field">
+  <label>Способ связи</label>
+  <input
+    id="editProfileContactMethod"
+    type="text"
+    class="edit-profile-input"
+    placeholder="@telegram или Discord"
+  >
+</div>
+
+        <div class="edit-profile-field">
+          <label>Описание</label>
+
+          <textarea
+            id="editDescription"
+            rows="4"
+            class="edit-profile-textarea"
+          >${userData.description}</textarea>
         </div>
+
+        <div class="edit-profile-actions">
+          <button class="profile-edit-btn" id="cancelEditBtn">
+            Отмена
+          </button>
+
+          <button class="file-upload-btn" id="saveEditBtn">
+            Сохранить
+          </button>
+        </div>
+
       </div>
     </div>
-  `;
+  </div>
+`;
 
-  if (!document.getElementById('editProfileModal')) {
-    document.body.insertAdjacentHTML('beforeend', editModalHTML);
-  }
+const oldEditModal = document.getElementById("editProfileModal");
+if (oldEditModal) oldEditModal.remove();
+
+document.body.insertAdjacentHTML("beforeend", editModalHTML);
 
   const profileHTML = `
     <div class="profile">
@@ -757,7 +824,35 @@ async function renderProfile() {
 
 <span class="profile-rating-count">${reviews.length} оценок</span>
         </div>
+${
+  userData.city || userData.contactMethod
+    ? `
+      <div class="profile-shop-info">
+        ${
+          userData.city
+            ? `
+              <div class="profile-shop-info-item">
+                <img src="/icons/location.svg" alt="">
+                <span>${userData.city}</span>
+              </div>
+            `
+            : ""
+        }
 
+        ${
+          userData.contactMethod
+            ? `
+              <div class="profile-shop-info-item">
+                <img src="/icons/chat.svg" alt="">
+                <span>${userData.contactMethod}</span>
+              </div>
+            `
+            : ""
+        }
+      </div>
+    `
+    : ""
+}
         <div class="profile-shop-grid">
           ${
             ads && ads.length > 0
@@ -902,6 +997,8 @@ function setupEditProfileModal() {
   const avatarPreview = document.getElementById('avatarPreview');
   const fileName = document.getElementById('fileName');
   const openEditBtn = document.getElementById('openEditProfileBtn');
+const editCity = document.getElementById("editProfileCity");
+const editContactMethod = document.getElementById("editProfileContactMethod");
 
   if (editAvatar) {
     editAvatar.addEventListener('change', (e) => {
@@ -927,6 +1024,8 @@ function setupEditProfileModal() {
     editModal.classList.add('show');
     editDescription.value = profileData?.bio || '';
     editUsername.value = profileData?.username || '';
+    editCity.value = profileData?.city || "";
+    editContactMethod.value = profileData?.contactMethod || "";
   }
 
   function closeEditModal() {
@@ -941,7 +1040,9 @@ function setupEditProfileModal() {
     
     const updateData = {
   bio: bio,
-  username: username
+  username: username,
+  city: editCity.value.trim(),
+  contactMethod: editContactMethod.value.trim()
 };
     if (avatarFile) updateData.avatar = avatarFile;
     
@@ -1191,34 +1292,227 @@ menuItems.forEach(item => {
   });
 });
 
-settingsBtn?.addEventListener("click", () => {
+settingsBtn?.addEventListener("click", async () => {
   switchToSection("settings");
-  contentArea.innerHTML = `
-  <div class="settings-page">
-    <h2>Настройки</h2>
 
-    <div class="settings-card">
-      <div>
-        <h3>Тема приложения</h3>
-        <p>Светлая или тёмная фиолетово-розовая тема</p>
+  contentArea.innerHTML = `
+    <div class="settings-page">
+      <h2>Настройки</h2>
+
+      <div class="settings-card">
+        <div>
+          <h3>Тема приложения</h3>
+          <p>Светлая или тёмная тема</p>
+        </div>
+
+        <button class="theme-toggle-btn" onclick="toggleTheme()">
+          Сменить тему
+        </button>
       </div>
 
-      <button class="theme-toggle-btn" onclick="toggleTheme()">
-        Сменить тему
-      </button>
-    </div>
+<div class="settings-card privacy-settings-card">
+  <div>
+    <h3>Приватность</h3>
   </div>
-`;
-  const filtersBlock = document.querySelector(".filters");
-  const searchWrapper = document.querySelector(".search-wrapper");
-  if (filtersBlock) filtersBlock.style.display = "none";
-  if (searchWrapper) searchWrapper.style.display = "none";
-  if (profileAvatar) {
-    profileAvatar.style.display = "block";
-    loadUserAvatar();
-  }
-  menuItems.forEach(i => i.classList.remove("active"));
+<div class="privacy-settings-row">
+  <span class="privacy-settings-label">
+    Кто может видеть мой профиль
+  </span>
+
+  <select class="privacy-select" id="profile-privacy-select">
+    <option value="public">Все пользователи</option>
+    <option value="followers">Только подписчики</option>
+  </select>
+</div>
+
+  <button class="blacklist-open-btn" onclick="openBlacklistModal()">
+    Черный список
+  </button>
+</div>
+      <div class="settings-card notification-settings-card">
+  <div class="settings-card-header">
+    <h3>Уведомления</h3>
+    <p>Какие уведомления вы хотите получать</p>
+  </div>
+
+  <div class="notification-setting-item">
+    <span>Лайки</span>
+
+    <label class="switch">
+      <input type="checkbox" id="notifyLikes">
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <div class="notification-setting-item">
+    <span>Подписчики</span>
+
+    <label class="switch">
+      <input type="checkbox" id="notifyFollowers">
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <div class="notification-setting-item">
+    <span>Комментарии</span>
+
+    <label class="switch">
+      <input type="checkbox" id="notifyComments">
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <div class="notification-setting-item">
+    <span>Отзывы</span>
+
+    <label class="switch">
+      <input type="checkbox" id="notifyReviews">
+      <span class="slider"></span>
+    </label>
+  </div>
+</div>
+<div class="settings-card notification-settings-card">
+  <div class="settings-card-header">
+    <h3>Магазин</h3>
+    <p>Настройки отображения магазина и отзывов</p>
+  </div>
+
+  <div class="notification-setting-item">
+    <span>Показывать магазин в профиле</span>
+
+    <label class="switch">
+      <input type="checkbox" id="showStoreInProfile">
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <div class="notification-setting-item">
+    <span>Разрешить отзывы</span>
+
+    <label class="switch">
+      <input type="checkbox" id="allowReviews">
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <div class="notification-setting-item">
+    <span>Показывать рейтинг в профиле</span>
+
+    <label class="switch">
+      <input type="checkbox" id="showRatingInProfile">
+      <span class="slider"></span>
+    </label>
+  </div>
+</div>
+<div class="settings-card account-settings-card">
+  <div class="settings-card-header">
+    <h3>Аккаунт</h3>
+    <p>Управление входом и аккаунтом</p>
+  </div>
+
+  <div class="account-settings-actions">
+    <button class="account-settings-btn" onclick="openChangePasswordModal()">
+      Изменить пароль
+    </button>
+
+    <button class="account-settings-btn" onclick="logoutAccount()">
+      Выйти из аккаунта
+    </button>
+
+    <button class="account-settings-btn danger" onclick="deleteMyAccount()">
+      Удалить аккаунт
+    </button>
+  </div>
+</div>
+    </div>
+  `;
+
+  await loadProfilePrivacy();
+
+  const privacySelect = document.getElementById("profile-privacy-select");
+
+  privacySelect.onchange = async () => {
+    await updateProfilePrivacy(privacySelect.value);
+  };
+
+  const notificationSettings = await getNotificationSettings();
+
+if (notificationSettings) {
+  document.getElementById("notifyLikes").checked =
+    notificationSettings.notifyLikes;
+
+  document.getElementById("notifyFollowers").checked =
+    notificationSettings.notifyFollowers;
+
+  document.getElementById("notifyComments").checked =
+    notificationSettings.notifyComments;
+
+  document.getElementById("notifyReviews").checked =
+    notificationSettings.notifyReviews;
+}
+
+async function saveNotificationSettings() {
+  await updateNotificationSettings({
+    notifyLikes:
+      document.getElementById("notifyLikes").checked,
+
+    notifyFollowers:
+      document.getElementById("notifyFollowers").checked,
+
+    notifyComments:
+      document.getElementById("notifyComments").checked,
+
+    notifyReviews:
+      document.getElementById("notifyReviews").checked
+  });
+}
+
+[
+  "notifyLikes",
+  "notifyFollowers",
+  "notifyComments",
+  "notifyReviews"
+].forEach(id => {
+  document.getElementById(id)
+    ?.addEventListener("change", saveNotificationSettings);
 });
+const storeSettings = await getStoreSettings();
+
+if (storeSettings) {
+  document.getElementById("showStoreInProfile").checked =
+    storeSettings.showStoreInProfile;
+
+  document.getElementById("allowReviews").checked =
+    storeSettings.allowReviews;
+
+  document.getElementById("showRatingInProfile").checked =
+    storeSettings.showRatingInProfile;
+}
+
+async function saveStoreSettings() {
+  await updateStoreSettings({
+    showStoreInProfile:
+      document.getElementById("showStoreInProfile").checked,
+
+    allowReviews:
+      document.getElementById("allowReviews").checked,
+
+    showRatingInProfile:
+      document.getElementById("showRatingInProfile").checked
+  });
+}
+
+[
+  "showStoreInProfile",
+  "allowReviews",
+  "showRatingInProfile"
+].forEach(id => {
+  document.getElementById(id)
+    ?.addEventListener("change", saveStoreSettings);
+});
+});
+
+
 
 profileAvatar?.addEventListener("click", () => {
   switchToSection("profile");
@@ -1306,22 +1600,36 @@ async function renderUserSearchResults(query) {
 }
 
 window.openUserProfile = async function(userId) {
-
-    closePostModal();
+  closePostModal();
 
   const myId = localStorage.getItem("userId");
 
   if (myId && String(userId) === String(myId)) {
-    closePostModal();
     switchToSection("profile");
     return;
   }
 
-  // чужой профиль
   if (userSearchWrapper) userSearchWrapper.style.display = "none";
 
   const user = await getUserProfile(userId);
-  openedUserPosts = user.posts || [];
+
+if (user.isBlocked) {
+  contentArea.innerHTML = `
+    <div class="profile blocked-profile">
+      <div class="blocked-profile-content">
+
+        <h1>${user.username || "Пользователь"}</h1>
+
+        <p>
+          ${user.message || "Этот пользователь вас заблокировал"}
+        </p>
+
+      </div>
+    </div>
+  `;
+
+  return;
+}
 
   if (!user) {
     contentArea.innerHTML = `
@@ -1332,6 +1640,16 @@ window.openUserProfile = async function(userId) {
     return;
   }
 
+  openedUserPosts = user.posts || [];
+
+  const followBtnText = user.isFollowing
+    ? "Отписаться"
+    : user.requestSent
+      ? "Заявка отправлена"
+      : user.isPrivate
+        ? "Запросить подписку"
+        : "Подписаться";
+
   contentArea.innerHTML = `
     <div class="profile">
       <div class="profile-header">
@@ -1340,56 +1658,84 @@ window.openUserProfile = async function(userId) {
         </div>
 
         <div class="profile-info">
-          <div class="profile-info-header">
-            <h1>${user.username}</h1>
+<div class="profile-info-header other-profile-header">
+  <h1>${user.username}</h1>
+
+  <div class="other-profile-menu">
+    <button class="other-profile-menu-btn" onclick="event.stopPropagation(); toggleOtherProfileMenu()">
+      <img src="/icons/ellipsis.svg" alt="Меню">
+    </button>
+
+    <div class="other-profile-dropdown" id="otherProfileDropdown">
+      <button onclick="event.stopPropagation(); blockUserFromProfile('${userId}')">
+        Заблокировать
+      </button>
+    </div>
+  </div>
+</div>
+
+          <div class="profile-stats">
+            <div class="stat-item">
+              <span class="stat-value">${user.postsCount ?? 0}</span>
+              <span class="stat-label">публикаций</span>
+            </div>
+
+            <div class="stat-item clickable-stat" onclick="openFollowersModal('${userId}')">
+              <span class="stat-value" id="otherFollowersCount">${user.followersCount ?? 0}</span>
+              <span class="stat-label">подписчиков</span>
+            </div>
+
+            <div class="stat-item clickable-stat" onclick="openFollowingModal('${userId}')">
+              <span class="stat-value">${user.followingCount ?? 0}</span>
+              <span class="stat-label">подписок</span>
+            </div>
           </div>
 
-<div class="profile-stats">
-  <div class="stat-item">
-    <span class="stat-value">${user.postsCount ?? 0}</span>
-    <span class="stat-label">публикаций</span>
-  </div>
+          <div class="profile-description">${user.bio || 'Описание отсутствует'}</div>
 
-<div class="stat-item clickable-stat" onclick="openFollowersModal('${userId}')">
-  <span class="stat-value" id="otherFollowersCount">${user.followersCount ?? 0}</span>
-  <span class="stat-label">подписчиков</span>
-</div>
-
-<div class="stat-item clickable-stat" onclick="openFollowingModal('${userId}')">
-  <span class="stat-value">${user.followingCount ?? 0}</span>
-  <span class="stat-label">подписок</span>
-</div>
-</div>
-
-<div class="profile-description">${user.bio || 'Описание отсутствует'}</div>
           <button class="profile-follow-btn" id="followBtn" onclick="toggleFollowFromProfile('${userId}')">
-  ${user.isFollowing ? 'Отписаться' : 'Подписаться'}
-</button>
+            ${followBtnText}
+          </button>
         </div>
       </div>
 
       <div class="profile-tabs">
-  <div class="profile-tab active" onclick="showOtherUserTab('posts', event)">
-    <img src="/icons/grid.svg">
-  </div>
+        <div class="profile-tab active" onclick="showOtherUserTab('posts', event)">
+          <img src="/icons/grid.svg">
+        </div>
 
-  <div class="profile-tab" onclick="showOtherUserTab('shop', event)">
-    <img src="/icons/shop.svg">
-  </div>
-</div>
+${
+  user.showStoreInProfile
+    ? `
+      <div class="profile-tab" onclick="showOtherUserTab('shop', event)">
+        <img src="/icons/shop.svg">
+      </div>
+    `
+    : ""
+}
+      </div>
 
       <div class="profile-grid" id="otherUserProfileGrid" data-user-id="${userId}">
-        ${(user.posts || []).map(post => `
-          <div class="profile-grid-item">
-            <img src="${post.imageUrl ? `https://localhost:7145${post.imageUrl}` : ''}">
-            <div class="profile-grid-item-overlay" onclick="openPostModal('${post.id}')">
-              <div class="post-card-likes" onclick="toggleLike(event, '${post.id}')">
-                <img src="${post.isLiked ? '/icons/heart-filled.svg' : '/icons/heart.svg'}">
-                <span>${post.likesCount ?? 0}</span>
+        ${
+          user.isPrivate
+            ? `
+              <div class="section-placeholder" style="grid-column:1/-1;">
+                🔒 Профиль закрыт<br>
+                Подпишитесь, чтобы видеть публикации
               </div>
-            </div>
-          </div>
-        `).join('')}
+            `
+            : (user.posts || []).map(post => `
+              <div class="profile-grid-item">
+                <img src="${post.imageUrl ? `https://localhost:7145${post.imageUrl}` : ''}">
+                <div class="profile-grid-item-overlay" onclick="openPostModal('${post.id}')">
+                  <div class="post-card-likes" onclick="toggleLike(event, '${post.id}')">
+                    <img src="${post.isLiked ? '/icons/heart-filled.svg' : '/icons/heart.svg'}">
+                    <span>${post.likesCount ?? 0}</span>
+                  </div>
+                </div>
+              </div>
+            `).join('')
+        }
       </div>
     </div>
   `;
@@ -1467,22 +1813,62 @@ window.showOtherUserTab = async function(tab, event) {
   }
 
   if (tab === "shop") {
-    const ads = await getUserProductAds(userId);
+const user = await getUserProfile(userId);
+const ads = await getUserProductAds(userId);
 const reviews = await getUserReviews(userId);
 const averageRating = getAverageRating(reviews);
+  const city = user.city || user.City || "";
+  const contactMethod = user.contactMethod || user.ContactMethod || "";
 
     oldContainer.outerHTML = `
       <div class="profile-shop-layout" id="otherUserProfileGrid" data-user-id="${userId}">
         <div class="profile-shop-left">
-          <div class="profile-rating-summary">
-<span class="profile-rating-number">${averageRating}</span>
+          ${
+  user.showRatingInProfile
+    ? `
+      <div class="profile-rating-summary">
+        <span class="profile-rating-number">${averageRating}</span>
 
-<div class="profile-rating-stars">
-  ${renderStars(Math.round(Number(averageRating)))}
-</div>
+        <div class="profile-rating-stars">
+          ${renderStars(Math.round(Number(averageRating)))}
+        </div>
 
-<span class="profile-rating-count">${reviews.length} оценок</span>
-          </div>
+        <span class="profile-rating-count">${reviews.length} оценок</span>
+      </div>
+    `
+    : ""
+}
+${
+  user.city || user.contactMethod
+    ? `
+      <div class="profile-shop-info">
+
+        ${
+          user.city
+            ? `
+              <div class="profile-shop-info-item">
+                <img src="/icons/location.svg" alt="">
+                <span>${user.city}</span>
+              </div>
+            `
+            : ""
+        }
+
+        ${
+          user.contactMethod
+            ? `
+              <div class="profile-shop-info-item">
+                <img src="/icons/chat.svg" alt="">
+                <span>${user.contactMethod}</span>
+              </div>
+            `
+            : ""
+        }
+
+      </div>
+    `
+    : ""
+}
 
           <div class="profile-shop-grid">
             ${
@@ -1509,9 +1895,15 @@ const averageRating = getAverageRating(reviews);
   <div class="reviews-header">
     <h2>Отзывы</h2>
 
-    <button class="add-review-btn" onclick="openCreateReviewModal('${userId}')">
-      Оставить отзыв
-    </button>
+${
+  user.allowReviews
+    ? `
+      <button class="add-review-btn" onclick="openCreateReviewModal('${userId}')">
+        Оставить отзыв
+      </button>
+    `
+    : ""
+}
   </div>
 
   ${
@@ -1564,8 +1956,15 @@ window.toggleFollowFromProfile = async function(userId) {
   if (!result) return;
 
   const btn = document.getElementById("followBtn");
+
   if (btn) {
-    btn.textContent = result.isFollowing ? "Отписаться" : "Подписаться";
+    if (result.isFollowing) {
+      btn.textContent = "Отписаться";
+    } else if (result.requestSent) {
+      btn.textContent = "Заявка отправлена";
+    } else {
+      btn.textContent = "Подписаться";
+    }
   }
 
   const followersEl = document.getElementById("otherFollowersCount");
@@ -1971,8 +2370,7 @@ window.toggleInterestingLike = async function(event, postId) {
 };
 
 async function renderShopPage() {
-  const ads = await getProductAds(shopFilters);
-
+const ads = await getProductAds(shopFilters);
   contentArea.innerHTML = `
     <div class="shop-page">
 
@@ -2915,6 +3313,23 @@ async function renderNotificationsPage() {
                   <div class="notification-date">
                     ${formatNotificationDate(n.createdAt)}
                   </div>
+
+                  ${
+  n.type === "FollowRequest" && n.followRequestId && !n.isRead
+    ? `
+<div class="notification-request-actions">
+  <button onclick="event.stopPropagation(); acceptRequestFromNotification('${n.followRequestId}', this)">
+    Принять
+  </button>
+
+  <button onclick="event.stopPropagation(); rejectRequestFromNotification('${n.followRequestId}', this)">
+    Отклонить
+  </button>
+</div>
+    `
+    : ""
+}
+
                 </div>
 
                 ${!n.isRead ? `<div class="notification-dot"></div>` : ""}
@@ -2949,6 +3364,8 @@ function getNotificationText(type) {
       return "оставил(а) отзыв";
     case "NewPost":
       return "добавил(а) новый пост";
+    case "FollowRequest":
+      return "хочет подписаться на вас";
     default:
       return "у вас новое уведомление";
   }
@@ -3010,27 +3427,219 @@ async function updateNotificationsBadge() {
 }
 
 async function initTheme() {
-  const theme = await getUserTheme();
-  applyTheme(theme);
+  const dbTheme = await getUserTheme();
+  applyTheme(dbTheme || "light");
 }
 
 function applyTheme(theme) {
   document.body.classList.remove("light-theme", "dark-theme");
+  document.documentElement.classList.remove("light-theme", "dark-theme");
+
   document.body.classList.add(`${theme}-theme`);
-  localStorage.setItem("theme", theme);
+  document.documentElement.classList.add(`${theme}-theme`);
 }
 
 window.toggleTheme = async function() {
   const isDark = document.body.classList.contains("dark-theme");
   const newTheme = isDark ? "light" : "dark";
-
   applyTheme(newTheme);
   await updateUserTheme(newTheme);
 };
+
+window.acceptRequestFromNotification = async function(requestId, button) {
+  const res = await acceptFollowRequest(requestId);
+
+  if (!res.ok) {
+    alert(await res.text());
+    return;
+  }
+
+  const actions = button.closest(".notification-request-actions");
+
+  if (actions) {
+    actions.remove();
+  }
+};
+
+window.rejectRequestFromNotification = async function(requestId, button) {
+  const res = await rejectFollowRequest(requestId);
+
+  if (!res.ok) {
+    alert(await res.text());
+    return;
+  }
+
+  const actions = button.closest(".notification-request-actions");
+
+  if (actions) {
+    actions.remove();
+  }
+};
+
+window.openChangePasswordModal = function() {
+  let modal = document.getElementById("changePasswordModal");
+
+  if (!modal) {
+    document.body.insertAdjacentHTML("beforeend", `
+      <div class="modal hidden" id="changePasswordModal">
+        <div class="modal-overlay" onclick="closeChangePasswordModal()"></div>
+
+        <div class="modal-content change-password-content">
+          <img src="/icons/cross.svg" class="modal-close-icon" onclick="closeChangePasswordModal()" alt="Закрыть">
+
+          <h2 class="change-password-title">Изменить пароль</h2>
+
+          <input id="oldPasswordInput" type="password" class="edit-profile-input" placeholder="Старый пароль">
+          <input id="newPasswordInput" type="password" class="edit-profile-input" placeholder="Новый пароль">
+
+          <button class="file-upload-btn" onclick="saveNewPassword()">
+            Сохранить
+          </button>
+        </div>
+      </div>
+    `);
+
+    modal = document.getElementById("changePasswordModal");
+  }
+
+  document.getElementById("oldPasswordInput").value = "";
+  document.getElementById("newPasswordInput").value = "";
+
+  modal.classList.remove("hidden");
+  modal.classList.add("show");
+};
+
+window.closeChangePasswordModal = function() {
+  const modal = document.getElementById("changePasswordModal");
+  if (!modal) return;
+
+  modal.classList.add("hidden");
+  modal.classList.remove("show");
+};
+
+window.saveNewPassword = async function() {
+  const oldPassword = document.getElementById("oldPasswordInput").value.trim();
+  const newPassword = document.getElementById("newPasswordInput").value.trim();
+
+  if (!oldPassword || !newPassword) {
+    alert("Заполните оба поля");
+    return;
+  }
+
+  const result = await changePassword(oldPassword, newPassword);
+
+  if (!result) return;
+
+  alert("Пароль изменён");
+  closeChangePasswordModal();
+};
+
+window.logoutAccount = function() {
+  localStorage.removeItem("token");
+  localStorage.removeItem("userId");
+  localStorage.removeItem("username");
+
+  window.location.href = "loginpage2.html";
+};
+
+window.deleteMyAccount = async function() {
+  if (!confirm("Вы точно хотите удалить аккаунт? Это действие нельзя отменить.")) return;
+
+  const result = await deleteAccount();
+
+  if (!result) return;
+
+  localStorage.clear();
+  window.location.href = "login.html";
+};
+
+window.toggleOtherProfileMenu = function() {
+  const dropdown = document.getElementById("otherProfileDropdown");
+  if (!dropdown) return;
+
+  dropdown.classList.toggle("show");
+};
+
+document.addEventListener("click", (event) => {
+  if (!event.target.closest(".other-profile-menu")) {
+    document.getElementById("otherProfileDropdown")?.classList.remove("show");
+  }
+});
+
+window.blockUserFromProfile = async function(userId) {
+  if (!confirm("Заблокировать пользователя?")) return;
+
+  const result = await blockUser(userId);
+
+  if (!result) return;
+
+  alert("Пользователь добавлен в черный список");
+  switchToSection("home");
+};
+window.openBlacklistModal = async function() {
+  const users = await getBlockedUsers();
+
+  let modal = document.getElementById("blacklistModal");
+
+  if (!modal) {
+    document.body.insertAdjacentHTML("beforeend", `
+      <div class="modal hidden" id="blacklistModal">
+        <div class="modal-overlay" onclick="closeBlacklistModal()"></div>
+
+        <div class="modal-content blacklist-modal-content">
+          <img src="/icons/cross.svg" class="modal-close-icon" onclick="closeBlacklistModal()" alt="Закрыть">
+
+          <h2 class="blacklist-title">Черный список</h2>
+
+          <div class="blacklist-list" id="blacklistList"></div>
+        </div>
+      </div>
+    `);
+
+    modal = document.getElementById("blacklistModal");
+  }
+
+  const list = document.getElementById("blacklistList");
+
+  if (!users || users.length === 0) {
+    list.innerHTML = `<div class="section-placeholder">Черный список пуст</div>`;
+  } else {
+    list.innerHTML = users.map(user => `
+      <div class="blacklist-item">
+        <img src="${user.avatarUrl ? `https://localhost:7145${user.avatarUrl}` : "/icons/blank_pfp.jpg"}" alt="Аватар">
+
+        <span>${user.username}</span>
+
+        <button onclick="unblockUserFromList('${user.id}')">
+          Разблокировать
+        </button>
+      </div>
+    `).join("");
+  }
+
+  modal.classList.remove("hidden");
+  modal.classList.add("show");
+};
+
+window.closeBlacklistModal = function() {
+  const modal = document.getElementById("blacklistModal");
+  if (!modal) return;
+
+  modal.classList.add("hidden");
+  modal.classList.remove("show");
+};
+
+window.unblockUserFromList = async function(userId) {
+  const result = await unblockUser(userId);
+
+  if (!result) return;
+
+  await openBlacklistModal();
+};
 // ===== Инициализация =====
+initTheme();
+updateNotificationsBadge();
 createPostViewModal();
 createEditPostModal();
-initTheme();
 loadUserAvatar();
 switchToSection("home");
-updateNotificationsBadge();

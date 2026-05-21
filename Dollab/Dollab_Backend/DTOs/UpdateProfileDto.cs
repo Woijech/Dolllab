@@ -9,6 +9,8 @@
         public bool RemoveAvatar { get; set; } = false;
         public bool ClearBio { get; set; }
         public string? Username { get; set; }
+        public string? City { get; set; }
+        public string? ContactMethod { get; set; }
 
     }
 }

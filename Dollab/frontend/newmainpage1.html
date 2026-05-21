@@ -5,6 +5,14 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Dollab</title>
+<script>
+  const savedTheme = localStorage.getItem("theme");
+
+  if (savedTheme) {
+    document.documentElement.classList.add(savedTheme + "-theme");
+    document.body?.classList?.add(savedTheme + "-theme");
+  }
+</script>
 <link rel="stylesheet" href="styles.css">
 <link rel="icon" type="image/png" href="/icons/dllogo_small.png">
 </head>
@@ -44,7 +52,7 @@
   <div class="user-search-wrapper" style="display: none;">
     <div class="search">
       <img src="/icons/search.svg" alt="search" id="userSearchIcon" />
-      <input type="text" id="userSearchInput" placeholder="Поиск пользователей"/>
+      <input type="text" id="userSearchInput" placeholder="Поиск"/>
       <img src="/icons/cross.svg" alt="clear" id="userClearIcon" />
     </div>
   </div>
@@ -96,10 +104,10 @@
 <script src="profile.js"></script>
 <script src="post.js"></script>
 <script src="main.js"></script>
+<script src="settings.js"></script>
+<script src="notifications.js"></script>
 <script src="app.js"></script>
 <script src="shop.js"></script>
-<script src="notifications.js"></script>
-<script src="settings.js"></script>
 
 </body>
 </html>

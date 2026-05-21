@@ -6,7 +6,8 @@
         Like = 2,
         Comment = 3,
         Review = 4,
-        NewPost = 5
+        NewPost = 5,
+        FollowRequest = 6
     }
 
     public class Notification
@@ -31,5 +32,7 @@
         public bool IsRead { get; set; } = false;
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public int? FollowRequestId { get; set; }
     }
 }

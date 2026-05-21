@@ -54,10 +54,16 @@ async function updateProfile(token, data) {
     const formData = new FormData();
 
     if (data.username !== undefined)
-  formData.append("username", data.username);
+      formData.append("username", data.username);
 
     if (data.bio !== undefined)
       formData.append("bio", data.bio);
+
+    if (data.city !== undefined)
+      formData.append("city", data.city);
+
+    if (data.contactMethod !== undefined)
+      formData.append("contactMethod", data.contactMethod);
 
     if (data.avatar)
       formData.append("avatar", data.avatar);
@@ -78,16 +84,16 @@ async function updateProfile(token, data) {
 
     if (!res.ok) {
       const errorText = await res.text();
-      console.error('Ошибка сервера:', res.status, errorText);
+      console.error("Ошибка сервера:", res.status, errorText);
       return null;
     }
 
     const text = await res.text();
     if (!text) return { success: true };
-    
+
     return JSON.parse(text);
   } catch (error) {
-    console.error('Ошибка обновления профиля:', error);
+    console.error("Ошибка обновления профиля:", error);
     return null;
   }
 }

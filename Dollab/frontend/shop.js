@@ -35,20 +35,20 @@ async function createProductAd(token, data) {
 }
 
 async function getProductAds(filters = {}) {
+  const token = localStorage.getItem("token");
+
   const params = new URLSearchParams();
 
   if (filters.categoryId) params.append("categoryId", filters.categoryId);
   if (filters.priceFrom) params.append("priceFrom", filters.priceFrom);
   if (filters.priceTo) params.append("priceTo", filters.priceTo);
-  if (filters.search?.trim()) {
-  params.append("search", filters.search.trim());
-}
+  if (filters.search) params.append("search", filters.search);
 
-  const url = params.toString()
-    ? `${API_PRODUCT_ADS}?${params.toString()}`
-    : API_PRODUCT_ADS;
-
-  const res = await fetch(url);
+  const res = await fetch(`${API_URL}/api/product-ads?${params.toString()}`, {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
 
   if (!res.ok) {
     console.error("Ошибка загрузки объявлений:", res.status, await res.text());

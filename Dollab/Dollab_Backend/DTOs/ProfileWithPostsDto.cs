@@ -18,5 +18,15 @@
         public int FollowingCount { get; set; }
 
         public bool IsFollowing { get; set; }
+        public string ProfileVisibility { get; set; }
+        public bool IsPrivate { get; set; }
+        public bool RequestSent { get; set; }
+        public bool ShowStoreInProfile { get; set; }
+        public bool AllowReviews { get; set; }
+        public bool ShowRatingInProfile { get; set; }
+        public string? City { get; set; }
+        public string? ContactMethod { get; set; }
+        public bool IsBlocked { get; set; }
+        public bool CanFollow { get; set; }
     }
 }

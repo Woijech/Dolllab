@@ -18,9 +18,27 @@ namespace Dollab_Backend.Services
             NotificationType type,
             string message,
             int? postId = null,
-            int? reviewId = null)
+            int? reviewId = null,
+            int? followRequestId = null)
         {
             if (userId == fromUserId)
+                return;
+
+            var user = await _context.Users.FindAsync(userId);
+
+            if (user == null)
+                return;
+
+            if (type == NotificationType.Like && !user.NotifyLikes)
+                return;
+
+            if (type == NotificationType.Follow && !user.NotifyFollowers)
+                return;
+
+            if (type == NotificationType.Comment && !user.NotifyComments)
+                return;
+
+            if (type == NotificationType.Review && !user.NotifyReviews)
                 return;
 
             var notification = new Notification
@@ -31,6 +49,7 @@ namespace Dollab_Backend.Services
                 Message = message,
                 PostId = postId,
                 ReviewId = reviewId,
+                FollowRequestId = followRequestId,
                 CreatedAt = DateTime.UtcNow
             };
 

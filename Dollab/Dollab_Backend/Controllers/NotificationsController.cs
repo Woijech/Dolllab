@@ -40,6 +40,7 @@ namespace Dollab_Backend.Controllers
                     PostId = n.PostId,
                     ReviewId = n.ReviewId,
                     IsRead = n.IsRead,
+                    FollowRequestId = n.FollowRequestId,
                     CreatedAt = n.CreatedAt
                 })
                 .ToListAsync();

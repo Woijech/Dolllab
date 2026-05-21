@@ -139,7 +139,6 @@ public class PostController : ControllerBase
         if (post == null)
             return NotFound();
 
-        // 🔒 только владелец может удалить
         if (post.UserId != userId)
             return Forbid();
 
@@ -445,6 +444,12 @@ postId: post.Id
     public async Task<IActionResult> GetFeed()
     {
         var currentUserId = User.GetUserId();
+
+        var usersWhoBlockedMe = await _context.BlockedUsers
+    .Where(b => b.BlockedId == currentUserId)
+    .Select(b => b.BlockerId)
+    .ToListAsync();
+
         var weekAgo = DateTime.UtcNow.AddDays(-7);
 
         var followingIds = await _context.Follows
@@ -457,6 +462,7 @@ postId: post.Id
             .Include(p => p.Likes)
             .Include(p => p.Favorites)
             .Where(p =>
+                !usersWhoBlockedMe.Contains(p.UserId) &&
                 p.CreatedAt >= weekAgo &&
                 (
                     followingIds.Contains(p.UserId) ||
@@ -472,8 +478,11 @@ postId: post.Id
             .Include(p => p.User)
             .Include(p => p.Likes)
             .Include(p => p.Favorites)
-            .Where(p => !feedPostIds.Contains(p.Id))
-            .OrderBy(p => Guid.NewGuid())
+.Where(p =>
+    p.UserId != currentUserId &&
+    !feedPostIds.Contains(p.Id) &&
+    !usersWhoBlockedMe.Contains(p.UserId))
+            .OrderBy(p => EF.Functions.Random())
             .Take(5)
             .ToListAsync();
 
@@ -512,6 +521,11 @@ postId: post.Id
     public async Task<IActionResult> GetInterestingPosts()
     {
         var currentUserId = User.GetUserId();
+
+        var usersWhoBlockedMe = await _context.BlockedUsers
+    .Where(b => b.BlockedId == currentUserId)
+    .Select(b => b.BlockerId)
+    .ToListAsync();
 
         var posts = await _context.Posts
             .Include(p => p.User)

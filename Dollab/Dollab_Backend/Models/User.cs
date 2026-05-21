@@ -23,7 +23,19 @@ namespace Dollab_Backend.Models
         public List<UserReview> ReviewsWritten { get; set; } = new();
         public List<UserReview> ReviewsReceived { get; set; } = new();
         public string Theme { get; set; } = "light";
+        public string ProfileVisibility { get; set; } = "public";
+        public bool NotifyLikes { get; set; } = true;
+        public bool NotifyFollowers { get; set; } = true;
+        public bool NotifyComments { get; set; } = true;
+        public bool NotifyReviews { get; set; } = true;
+        public bool ShowStoreInProfile { get; set; } = true;
 
+        public bool AllowReviews { get; set; } = true;
+
+        public bool ShowRatingInProfile { get; set; } = true;
+        public string? City { get; set; }
+
+        public string? ContactMethod { get; set; }
     }
 
 }

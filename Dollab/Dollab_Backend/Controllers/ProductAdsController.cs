@@ -79,19 +79,28 @@ public class ProductAdsController : ControllerBase
     }
 
 [HttpGet]
-public async Task<IActionResult> GetProductAds(
+[Authorize]
+    public async Task<IActionResult> GetProductAds(
     [FromQuery] int? categoryId,
     [FromQuery] decimal? priceFrom,
     [FromQuery] decimal? priceTo,
     [FromQuery] string? search)
 {
-    var query = _context.ProductAds
+        var currentUserId = User.GetUserId();
+
+        var usersWhoBlockedMe = await _context.BlockedUsers
+            .Where(b => b.BlockedId == currentUserId)
+            .Select(b => b.BlockerId)
+            .ToListAsync();
+
+        var query = _context.ProductAds
         .Include(p => p.User)
         .Include(p => p.Category)
         .Include(p => p.Images)
         .AsQueryable();
+        query = query.Where(p => !usersWhoBlockedMe.Contains(p.UserId));
 
-    if (!string.IsNullOrWhiteSpace(search))
+        if (!string.IsNullOrWhiteSpace(search))
     {
         var searchText = search.Trim().ToLower();
 

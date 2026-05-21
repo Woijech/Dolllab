@@ -24,6 +24,8 @@ public class AppDbContext : DbContext
     public DbSet<CartItem> CartItems { get; set; }
     public DbSet<UserReview> UserReviews { get; set; }
     public DbSet<Notification> Notifications { get; set; }
+    public DbSet<FollowRequest> FollowRequests { get; set; }
+    public DbSet<BlockedUser> BlockedUsers { get; set; }
 
     public AppDbContext(DbContextOptions<AppDbContext> options)
         : base(options)
@@ -113,5 +115,33 @@ public class AppDbContext : DbContext
             .WithMany()
             .HasForeignKey(n => n.PostId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<FollowRequest>()
+    .HasOne(fr => fr.Requester)
+    .WithMany()
+    .HasForeignKey(fr => fr.RequesterId)
+    .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<FollowRequest>()
+            .HasOne(fr => fr.TargetUser)
+            .WithMany()
+            .HasForeignKey(fr => fr.TargetUserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<BlockedUser>()
+    .HasOne(b => b.Blocker)
+    .WithMany()
+    .HasForeignKey(b => b.BlockerId)
+    .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<BlockedUser>()
+            .HasOne(b => b.Blocked)
+            .WithMany()
+            .HasForeignKey(b => b.BlockedId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<BlockedUser>()
+            .HasIndex(b => new { b.BlockerId, b.BlockedId })
+            .IsUnique();
     }
 }

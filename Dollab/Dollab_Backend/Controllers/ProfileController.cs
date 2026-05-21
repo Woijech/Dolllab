@@ -6,6 +6,7 @@ using Dollab_Backend.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Runtime.InteropServices;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -63,7 +64,9 @@ public class ProfileController : ControllerBase
             FollowersCount = followersCount,
             FollowingCount = followingCount,
             IsFollowing = false,
-            Posts = posts
+            Posts = posts,
+            City= user.City,
+            ContactMethod = user.ContactMethod,
         });
     }
 
@@ -87,7 +90,7 @@ public class ProfileController : ControllerBase
         {
             var trimmedBio = dto.Bio.Trim();
 
-            if (trimmedBio.Length > 300)
+            if (trimmedBio.Length > 500)
                 return BadRequest("Bio too long");
 
             user.Bio = string.IsNullOrWhiteSpace(trimmedBio) ? null : trimmedBio;
@@ -131,7 +134,6 @@ public class ProfileController : ControllerBase
             user.AvatarUrl = $"/avatars/{fileName}";
         }
 
-        // 👤 USERNAME
         if (dto.Username != null)
         {
             var newUsername = dto.Username.Trim();
@@ -145,7 +147,6 @@ public class ProfileController : ControllerBase
             if (newUsername.Length > 20)
                 return BadRequest("Username too long");
 
-            // проверка на занятость
             var exists = await _context.Users
                 .AnyAsync(u => u.Username.ToLower() == newUsername.ToLower() && u.Id != userId);
 
@@ -155,13 +156,29 @@ public class ProfileController : ControllerBase
             user.Username = newUsername;
         }
 
+        if (dto.City != null)
+        {
+            user.City = string.IsNullOrWhiteSpace(dto.City)
+                ? null
+                : dto.City.Trim();
+        }
+
+        if (dto.ContactMethod != null)
+        {
+            user.ContactMethod = string.IsNullOrWhiteSpace(dto.ContactMethod)
+                ? null
+                : dto.ContactMethod.Trim();
+        }
+
         await _context.SaveChangesAsync();
 
         return Ok(new
         {
             username = user.Username,
             avatarUrl = user.AvatarUrl ?? "",
-            bio = user.Bio ?? ""
+            bio = user.Bio ?? "",
+            city = user.City ?? "",
+            contactMethod = user.ContactMethod ?? ""
         });
     }
 
@@ -180,6 +197,59 @@ public class ProfileController : ControllerBase
 
         if (user == null)
             return NotFound();
+        var isBlockedByProfileOwner = await _context.BlockedUsers
+    .AnyAsync(b => b.BlockerId == id && b.BlockedId == currentUserId);
+
+        if (isBlockedByProfileOwner)
+        {
+            return Ok(new
+            {
+                id = user.Id,
+                username = user.Username,
+                avatarUrl = "",
+                bio = "",
+                isBlocked = true,
+                isPrivate = true,
+                canFollow = false,
+                message = "Пользователь вас заблокировал"
+            });
+        }
+
+        var followersCount = await _context.Follows
+            .CountAsync(f => f.FollowingId == id);
+
+        var followingCount = await _context.Follows
+            .CountAsync(f => f.FollowerId == id);
+
+        var isFollowing = await _context.Follows
+            .AnyAsync(f => f.FollowerId == currentUserId && f.FollowingId == id);
+
+        var requestSent = await _context.FollowRequests
+            .AnyAsync(r =>
+                r.RequesterId == currentUserId &&
+                r.TargetUserId == id &&
+                r.Status == "pending");
+
+        if (user.ProfileVisibility == "followers" && currentUserId != id && !isFollowing)
+        {
+            return Ok(new
+            {
+                id = user.Id,
+                username = user.Username,
+                avatarUrl = user.AvatarUrl ?? "",
+                bio = user.Bio ?? "",
+                profileVisibility = user.ProfileVisibility,
+                isPrivate = true,
+                isFollowing = false,
+                requestSent,
+                postsCount = 0,
+                followersCount,
+                followingCount,
+                message = "Профиль закрыт",
+                IsBlocked = false,
+                CanFollow = true
+            });
+        }
 
         var posts = user.Posts
             .OrderByDescending(p => p.CreatedAt)
@@ -195,15 +265,6 @@ public class ProfileController : ControllerBase
             })
             .ToList();
 
-        var followersCount = await _context.Follows
-            .CountAsync(f => f.FollowingId == id);
-
-        var followingCount = await _context.Follows
-            .CountAsync(f => f.FollowerId == id);
-
-        var isFollowing = await _context.Follows
-            .AnyAsync(f => f.FollowerId == currentUserId && f.FollowingId == id);
-
         return Ok(new ProfileWithPostsDto
         {
             Id = user.Id,
@@ -214,9 +275,18 @@ public class ProfileController : ControllerBase
             FollowersCount = followersCount,
             FollowingCount = followingCount,
             IsFollowing = isFollowing,
-            Posts = posts
+            ProfileVisibility = user.ProfileVisibility,
+            IsPrivate = false,
+            RequestSent = requestSent,
+            ShowStoreInProfile = user.ShowStoreInProfile,
+            AllowReviews = user.AllowReviews,
+            ShowRatingInProfile = user.ShowRatingInProfile,
+            Posts = posts,
+            City = user.City ?? "",
+            ContactMethod = user.ContactMethod ?? ""
         });
     }
+
     [HttpGet("search")]
     public async Task<IActionResult> SearchUsers([FromQuery] string query)
     {
@@ -247,46 +317,119 @@ public class ProfileController : ControllerBase
         if (currentUserId == id)
             return BadRequest("You cannot follow yourself");
 
-        var userExists = await _context.Users.AnyAsync(u => u.Id == id);
-        if (!userExists)
-            return NotFound();
+        var targetUser = await _context.Users
+            .FirstOrDefaultAsync(u => u.Id == id);
 
-        var existing = await _context.Follows
-            .FirstOrDefaultAsync(f => f.FollowerId == currentUserId && f.FollowingId == id);
+        if (targetUser == null)
+            return NotFound("Пользователь не найден");
+        var isBlocked = await _context.BlockedUsers
+    .AnyAsync(b =>
+        b.BlockerId == id &&
+        b.BlockedId == currentUserId);
 
-        bool isFollowing;
+        if (isBlocked)
+            return BadRequest("Вы не можете подписаться на этого пользователя");
 
-        if (existing != null)
+        var existingFollow = await _context.Follows
+            .FirstOrDefaultAsync(f =>
+                f.FollowerId == currentUserId &&
+                f.FollowingId == id);
+
+        if (existingFollow != null)
         {
-            _context.Follows.Remove(existing);
-            isFollowing = false;
-        }
-        else
-        {
-            var follow = new Follow
+            _context.Follows.Remove(existingFollow);
+            await _context.SaveChangesAsync();
+
+            var followersCountAfterUnfollow = await _context.Follows
+                .CountAsync(f => f.FollowingId == id);
+
+            return Ok(new
             {
-                FollowerId = currentUserId,
-                FollowingId = id
+                isFollowing = false,
+                requestSent = false,
+                followersCount = followersCountAfterUnfollow,
+                message = "Вы отписались"
+            });
+        }
+
+        if (targetUser.ProfileVisibility == "followers")
+        {
+            var existingRequest = await _context.FollowRequests
+                .FirstOrDefaultAsync(r =>
+                    r.RequesterId == currentUserId &&
+                    r.TargetUserId == id &&
+                    r.Status == "pending");
+
+            if (existingRequest != null)
+            {
+                var followersCountForExistingRequest = await _context.Follows
+                    .CountAsync(f => f.FollowingId == id);
+
+                return Ok(new
+                {
+                    isFollowing = false,
+                    requestSent = true,
+                    followersCount = followersCountForExistingRequest,
+                    message = "Заявка уже отправлена"
+                });
+            }
+
+            var followRequest = new FollowRequest
+            {
+                RequesterId = currentUserId,
+                TargetUserId = id,
+                Status = "pending",
+                CreatedAt = DateTime.UtcNow
             };
 
-            _context.Follows.Add(follow);
-            isFollowing = true;
+            _context.FollowRequests.Add(followRequest);
+            await _context.SaveChangesAsync();
+
+            await _notificationService.CreateNotificationAsync(
+                userId: id,
+                fromUserId: currentUserId,
+                type: NotificationType.FollowRequest,
+                message: "хочет подписаться на вас",
+                followRequestId: followRequest.Id
+            );
+
+            var followersCountAfterRequest = await _context.Follows
+                .CountAsync(f => f.FollowingId == id);
+
+            return Ok(new
+            {
+                isFollowing = false,
+                requestSent = true,
+                followersCount = followersCountAfterRequest,
+                message = "Заявка на подписку отправлена"
+            });
         }
 
-        await _context.SaveChangesAsync();
-        await _notificationService.CreateNotificationAsync(
-    userId: id,
-    fromUserId: currentUserId,
-    type: NotificationType.Follow,
-    message: "подписался на вас"
-);
+        var follow = new Follow
+        {
+            FollowerId = currentUserId,
+            FollowingId = id
+        };
 
-        var followersCount = await _context.Follows.CountAsync(f => f.FollowingId == id);
+        _context.Follows.Add(follow);
+        await _context.SaveChangesAsync();
+
+        await _notificationService.CreateNotificationAsync(
+            userId: id,
+            fromUserId: currentUserId,
+            type: NotificationType.Follow,
+            message: "подписался на вас"
+        );
+
+        var followersCountAfterFollow = await _context.Follows
+            .CountAsync(f => f.FollowingId == id);
 
         return Ok(new
         {
-            isFollowing,
-            followersCount
+            isFollowing = true,
+            requestSent = false,
+            followersCount = followersCountAfterFollow,
+            message = "Вы подписались"
         });
     }
 
@@ -332,5 +475,24 @@ public class ProfileController : ControllerBase
             .ToListAsync();
 
         return Ok(following);
+    }
+
+    [HttpGet("by-username/{username}")]
+    [Authorize]
+    public async Task<IActionResult> GetByUsername(string username)
+    {
+        var user = await _context.Users
+            .Where(u => u.Username.ToLower() == username.ToLower())
+            .Select(u => new
+            {
+                id = u.Id,
+                username = u.Username
+            })
+            .FirstOrDefaultAsync();
+
+        if (user == null)
+            return NotFound();
+
+        return Ok(user);
     }
 }
