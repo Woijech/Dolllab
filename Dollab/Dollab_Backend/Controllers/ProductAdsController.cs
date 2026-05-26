@@ -98,8 +98,9 @@ public class ProductAdsController : ControllerBase
         .Include(p => p.Category)
         .Include(p => p.Images)
         .AsQueryable();
-        query = query.Where(p => !usersWhoBlockedMe.Contains(p.UserId));
-
+        query = query.Where(p =>
+            !p.IsHidden &&
+            !usersWhoBlockedMe.Contains(p.UserId));
         if (!string.IsNullOrWhiteSpace(search))
     {
         var searchText = search.Trim().ToLower();
@@ -152,7 +153,7 @@ public class ProductAdsController : ControllerBase
             .Include(p => p.User)
             .Include(p => p.Category)
             .Include(p => p.Images)
-            .Where(p => p.Id == id)
+            .Where(p => p.Id == id && !p.IsHidden)
             .Select(p => new ProductAdDto
             {
                 Id = p.Id,
@@ -197,7 +198,10 @@ public class ProductAdsController : ControllerBase
                 Username = p.User.Username,
                 CreatedAt = p.CreatedAt,
                 CategoryId = p.CategoryId,
-                Images = p.Images.Select(i => i.ImageUrl).ToList()
+                Images = p.Images.Select(i => i.ImageUrl).ToList(),
+                IsHidden = p.IsHidden,
+                HiddenReason = p.HiddenReason,
+                HiddenAt = p.HiddenAt,
             })
             .ToListAsync();
 
@@ -216,8 +220,9 @@ public class ProductAdsController : ControllerBase
             .Include(p => p.User)
             .Include(p => p.Category)
             .Include(p => p.Images)
-            .Where(p => p.UserId == userId)
-            .OrderByDescending(p => p.CreatedAt)
+            .Where(p =>
+                p.UserId == userId &&
+                !p.IsHidden).OrderByDescending(p => p.CreatedAt)
             .Select(p => new ProductAdDto
             {
                 Id = p.Id,

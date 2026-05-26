@@ -163,7 +163,9 @@ public class PostController : ControllerBase
                 p.Description,
                 p.CreatedAt,
                 LikesCount = p.Likes.Count,
-                IsLiked = p.Likes.Any(l => l.UserId == userId)
+                IsLiked = p.Likes.Any(l => l.UserId == userId),
+                IsHidden = p.IsHidden,
+                HiddenReason = p.HiddenReason
             })
             .ToListAsync();
 
@@ -462,6 +464,7 @@ postId: post.Id
             .Include(p => p.Likes)
             .Include(p => p.Favorites)
             .Where(p =>
+                !p.IsHidden &&
                 !usersWhoBlockedMe.Contains(p.UserId) &&
                 p.CreatedAt >= weekAgo &&
                 (
@@ -479,6 +482,7 @@ postId: post.Id
             .Include(p => p.Likes)
             .Include(p => p.Favorites)
 .Where(p =>
+    !p.IsHidden &&
     p.UserId != currentUserId &&
     !feedPostIds.Contains(p.Id) &&
     !usersWhoBlockedMe.Contains(p.UserId))
@@ -531,7 +535,10 @@ postId: post.Id
             .Include(p => p.User)
             .Include(p => p.Likes)
             .Include(p => p.Favorites)
-            .Where(p => p.UserId != currentUserId)
+            .Where(p =>
+    !p.IsHidden &&
+    p.UserId != currentUserId &&
+    !usersWhoBlockedMe.Contains(p.UserId))
             .OrderByDescending(p => p.CreatedAt)
             .Select(p => new
             {

@@ -26,7 +26,6 @@ namespace Dollab_Backend.Controllers
             _context = context;
         }
 
-        // ===== Регистрация =====
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterRequest request)
         {
@@ -52,7 +51,6 @@ namespace Dollab_Backend.Controllers
             return Ok("User registered successfully");
         }
 
-        // ===== Логин =====
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginRequest request)
         {
@@ -64,7 +62,26 @@ namespace Dollab_Backend.Controllers
             var hash = HashPassword(request.Password);
             if (user.PasswordHash != hash) return Unauthorized("Invalid login or password");
 
-            // Генерация JWT
+            if (user.IsBanned)
+            {
+                return Unauthorized(new
+                {
+                    message = "Ваш аккаунт заблокирован",
+                    reason = user.BanReason
+                });
+            }
+
+            if (user.BlockedUntil != null &&
+                user.BlockedUntil > DateTime.UtcNow)
+            {
+                return Unauthorized(new
+                {
+                    message = "Ваш аккаунт временно заблокирован",
+                    blockedUntil = user.BlockedUntil,
+                    reason = user.BlockReason
+                });
+            }
+
             var keyBytes = new byte[32] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32 };
             var key = new SymmetricSecurityKey(keyBytes);
 
@@ -93,7 +110,6 @@ namespace Dollab_Backend.Controllers
             });
         }
 
-        // ===== Хэширование пароля =====
         private static string HashPassword(string password)
         {
             using var sha256 = SHA256.Create();

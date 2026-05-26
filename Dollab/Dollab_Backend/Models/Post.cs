@@ -15,5 +15,8 @@
         public List<Like> Likes { get; set; } = new();
         public List<Comment> Comments { get; set; } = new();
         public List<Favorite> Favorites { get; set; } = new();
+        public bool IsHidden { get; set; } = false;
+        public string? HiddenReason { get; set; }
+        public DateTime? HiddenAt { get; set; }
     }
 }

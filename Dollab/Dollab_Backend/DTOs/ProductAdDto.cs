@@ -20,5 +20,10 @@
 
         public List<string> Images { get; set; } = new();
         public int CategoryId { get; set; }
+        public bool IsHidden { get; set; }
+
+        public string? HiddenReason { get; set; }
+
+        public DateTime? HiddenAt { get; set; }
     }
 }

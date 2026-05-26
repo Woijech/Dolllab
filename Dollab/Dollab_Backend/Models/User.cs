@@ -29,13 +29,15 @@ namespace Dollab_Backend.Models
         public bool NotifyComments { get; set; } = true;
         public bool NotifyReviews { get; set; } = true;
         public bool ShowStoreInProfile { get; set; } = true;
-
         public bool AllowReviews { get; set; } = true;
-
         public bool ShowRatingInProfile { get; set; } = true;
         public string? City { get; set; }
-
         public string? ContactMethod { get; set; }
+        public bool IsBanned { get; set; } = false;
+        public string? BanReason { get; set; }
+        public DateTime? BlockedUntil { get; set; }
+        public string? BlockReason { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 
 }

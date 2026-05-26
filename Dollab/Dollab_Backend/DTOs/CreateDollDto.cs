@@ -7,6 +7,7 @@
         public string Series { get; set; }
         public string Description { get; set; }
         public string ImageUrl { get; set; }
+        public IFormFile? Image { get; set; }
         public int ReleaseYear { get; set; }
     }
 }

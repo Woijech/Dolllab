@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dollab — Админка</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900;1000&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="adminstyles.css">
+  <script src="app1.js"></script>
+
+</head>
+<body>
+
+  
+  <div class="admin-page">
+
+    <!-- TOPBAR -->
+
+    <header class="admin-topbar">
+
+      <div class="admin-logo">
+        <img src="/icons/dllogo_small.png" alt="">
+      </div>
+
+      <div class="admin-topbar-center">
+
+        <button class="admin-topbar-btn active" id="adminDollopediaBtn">
+            <img src="/icons/book-heart.svg" alt="">
+        </button>
+
+        <button class="admin-topbar-btn" id="adminCategoriesBtn">
+          <img src="/icons/3lines.svg" alt="">
+        </button>
+
+        <button class="admin-topbar-btn">
+          <img src="/icons/bell.svg" alt="">
+        </button>
+
+      </div>
+
+      <button class="admin-logout-btn">
+        <img src="/icons/logout.svg" alt="">
+        <span>Выйти</span>
+      </button>
+
+    </header>
+
+    <!-- CONTENT -->
+
+<main class="admin-content" id="adminContent">
+      <!-- STATS -->
+
+      <section class="admin-stats-grid">
+
+<div class="admin-stat-card" onclick="navigateAdminTo('users')">
+  <div class="admin-stat-icon">
+    <img src="/icons/users.svg" alt="">
+  </div>
+
+  <div class="admin-stat-info">
+    <span>Пользователи</span>
+    <h2 id="adminUsersCount">0</h2>
+  </div>
+</div>
+
+<div class="admin-stat-card" onclick="navigateAdminTo('posts')">
+  <div class="admin-stat-icon">
+    <img src="/icons/posts.svg" alt="">
+  </div>
+
+  <div class="admin-stat-info">
+    <span>Посты</span>
+    <h2 id="adminPostsCount">0</h2>
+  </div>
+</div>
+
+<div class="admin-stat-card" onclick="navigateAdminTo('product-ads')">
+  <div class="admin-stat-icon">
+    <img src="/icons/shop.svg" alt="">
+  </div>
+
+  <div class="admin-stat-info">
+    <span>Объявления</span>
+<h2 id="adminAdsCount">0</h2>
+  </div>
+</div>
+
+        <div class="admin-stat-card">
+          <div class="admin-stat-icon">
+            <img src="/icons/flag.svg" alt="">
+          </div>
+
+          <div class="admin-stat-info">
+            <span>Жалобы</span>
+            <h2>33</h2>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- CENTER -->
+
+      <section class="admin-middle-layout">
+
+        <div class="admin-chart-placeholder"></div>
+
+        <div class="admin-reports-card">
+
+          <div class="admin-card-header">
+            <h3>Активные жалобы</h3>
+            <button>Смотреть все</button>
+          </div>
+
+          <div class="admin-report-item">
+
+            <div class="admin-report-left">
+              <div class="admin-report-icon">
+                <img src="/icons/users.svg" alt="">
+              </div>
+
+              <div>
+                <h4>Жалобы на пользователей</h4>
+                <p>Неприемлемое поведение</p>
+              </div>
+            </div>
+
+            <div class="admin-report-count">33</div>
+
+          </div>
+
+          <div class="admin-report-item">
+
+            <div class="admin-report-left">
+              <div class="admin-report-icon">
+                <img src="/icons/posts.svg" alt="">
+              </div>
+
+              <div>
+                <h4>Жалобы на контент</h4>
+                <p>Нарушение правил сообщества</p>
+              </div>
+            </div>
+
+            <div class="admin-report-count">33</div>
+
+          </div>
+
+          <div class="admin-report-item">
+
+            <div class="admin-report-left">
+              <div class="admin-report-icon">
+                <img src="/icons/shop.svg" alt="">
+              </div>
+
+              <div>
+                <h4>Жалобы на объявления</h4>
+                <p>Мошенничество, запрещенные товары и т.д</p>
+              </div>
+            </div>
+
+            <div class="admin-report-count">33</div>
+
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- REQUESTS -->
+
+      <section class="admin-requests-card">
+
+        <div class="admin-card-header">
+          <h3>Заявки пользователей</h3>
+          <button>Смотреть все</button>
+        </div>
+
+        <table class="admin-table">
+
+          <thead>
+            <tr>
+              <th>Кто отправил</th>
+              <th>Тип заявки</th>
+              <th>Описание</th>
+              <th>Дата</th>
+              <th>Статус</th>
+            </tr>
+          </thead>
+
+          <tbody>
+
+            <tr>
+              <td>
+                <div class="admin-user-cell">
+                  <img src="/images/avatar.jpg" alt="">
+                  <span>zlatoslava</span>
+                </div>
+              </td>
+
+              <td>AddDoll</td>
+
+              <td>Добавь куклу пж</td>
+
+              <td>
+                01.01.2026
+                <br>
+                11:00
+              </td>
+
+              <td class="approved-status">
+                Одобрено
+              </td>
+            </tr>
+
+          </tbody>
+
+        </table>
+
+      </section>
+
+    </main>
+
+  </div>
+
+<script src="adminAPI.js"></script>
+<script src="admin.js"></script>
+
+</body>
+</html>

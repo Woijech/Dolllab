@@ -4823,3 +4823,161 @@ body.dark-theme .blacklist-item button {
 body.dark-theme .privacy-settings-label {
   color: #DFC3FF;
 }
+
+.hidden-post-card {
+  position: relative;
+}
+
+.hidden-post-overlay {
+  position: absolute;
+  inset: 0;
+
+  background: rgba(255, 103, 166, 0.78);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 16px;
+
+  text-align: center;
+
+  border-radius: inherit;
+
+  z-index: 5;
+}
+
+.hidden-post-message {
+  color: white;
+
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  font-weight: 800;
+}
+
+.hidden-post-message strong {
+  font-size: 16px;
+}
+
+.hidden-post-message span {
+  font-size: 13px;
+  line-height: 1.25;
+}
+
+.hidden-post-delete-btn {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+
+  width: 34px;
+  height: 34px;
+
+  border: none;
+  border-radius: 50%;
+
+  background: white;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+
+  transition: 0.2s;
+}
+
+.hidden-post-delete-btn:hover {
+  transform: scale(1.08);
+}
+
+.hidden-post-delete-btn img {
+  width: 17px;
+  height: 17px;
+  object-fit: contain;
+}
+
+body.dark-theme .hidden-post-overlay {
+  background: rgba(39, 31, 56, 0.88);
+}
+
+body.dark-theme .hidden-post-message {
+  color: #FEB6E7;
+}
+.hidden-product-card {
+  position: relative;
+}
+
+.hidden-product-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+
+  background: rgba(255, 103, 166, 0.85);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 16px;
+  text-align: center;
+
+  border-radius: inherit;
+}
+
+.hidden-product-message {
+  color: white;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-weight: 800;
+}
+
+.hidden-product-message strong {
+  font-size: 15px;
+}
+
+.hidden-product-message span {
+  font-size: 13px;
+  line-height: 1.25;
+}
+
+.hidden-product-delete-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+
+  width: 34px;
+  height: 34px;
+
+  border: none;
+  border-radius: 50%;
+
+  background: white;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.hidden-product-delete-btn:hover {
+  transform: scale(1.08);
+}
+
+.hidden-product-delete-btn img {
+  width: 17px;
+  height: 17px;
+  object-fit: contain;
+}
+
+body.dark-theme .hidden-product-overlay {
+  background: rgba(39, 31, 56, 0.9);
+}
+
+body.dark-theme .hidden-product-message {
+  color: #FEB6E7;
+}

@@ -777,32 +777,96 @@ document.body.insertAdjacentHTML("beforeend", editModalHTML);
     console.log('Полученные посты:', posts);
     
     if (posts && posts.length > 0) {
-      profileGrid.innerHTML = posts.map(post => `
-        <div class="profile-grid-item">
-          <img src="${post.imageUrl ? `https://localhost:7145${post.imageUrl}` : 'https://via.placeholder.com/300x300/FFE4F0/FF67A6?text=Пост'}" alt="Пост">
-    <div class="profile-grid-item-overlay" onclick="openPostModal('${post.id}')">
-      
-<div class="post-card-likes" onclick="toggleLike(event, '${post.id}')">
-  <img src="${post.isLiked ? '/icons/heart-filled.svg' : '/icons/heart.svg'}" alt="Лайк">
-  <span>${post.likesCount ?? 0}</span>
-</div>
-            
-            <div class="post-card-menu" style="position: relative;">
-<span onclick="event.stopPropagation(); togglePostCardMenu(event, '${post.id}')" style="cursor: pointer; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px;" title="Меню">
-  <img src="/icons/ellipsis.svg" alt="Меню" style="width: 27px; height: 27px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">
-</span>
-              <div class="post-card-dropdown" id="postCardDropdown-${post.id}" style="display: none; position: absolute; bottom: 100%; right: 0; background: white; border-radius: 12px; box-shadow: 0 8px 24px rgba(255, 103, 166, 0.2); min-width: 150px; z-index: 100; overflow: hidden; margin-bottom: 8px;">
-                <button onclick="event.stopPropagation(); openEditPostModalFromCard('${post.id}')" style="display: flex; align-items: center; gap: 8px; padding: 10px 16px; border: none; background: none; width: 100%; cursor: pointer; color: #FF67A6; font-size: 13px; font-weight: 600; border-bottom: 1px solid rgba(255, 103, 166, 0.1);">
-                  <img src="/icons/pencil.svg" alt="Редактировать" style="width: 16px; height: 16px;"> Редактировать
-                </button>
-                <button onclick="event.stopPropagation(); deletePostFromCard('${post.id}')" style="display: flex; align-items: center; gap: 8px; padding: 10px 16px; border: none; background: none; width: 100%; cursor: pointer; color: #FF4444; font-size: 13px; font-weight: 600;">
-                  <img src="/icons/trash.svg" alt="Удалить" style="width: 16px; height: 16px;"> Удалить
-                </button>
-              </div>
+     profileGrid.innerHTML = posts.map(post => `
+  <div class="profile-grid-item ${post.isHidden ? "hidden-post-card" : ""}">
+    
+    <img
+      src="${post.imageUrl
+        ? `https://localhost:7145${post.imageUrl}`
+        : 'https://via.placeholder.com/300x300/FFE4F0/FF67A6?text=Пост'}"
+      alt="Пост"
+    >
+
+    ${
+      post.isHidden
+        ? `
+          <div class="hidden-post-overlay">
+
+            <div class="hidden-post-message">
+              <strong>Пост скрыт модератором</strong>
+
+              <span>
+                ${post.hiddenReason || "Причина не указана"}
+              </span>
             </div>
+
+            <button
+              class="hidden-post-delete-btn"
+              onclick="event.stopPropagation(); deletePostFromCard('${post.id}')"
+            >
+              <img src="/icons/trash.svg" alt="Удалить">
+            </button>
+
           </div>
-        </div>
-      `).join('');
+        `
+        : `
+          <div class="profile-grid-item-overlay" onclick="openPostModal('${post.id}')">
+
+            <div class="post-card-likes" onclick="toggleLike(event, '${post.id}')">
+              <img
+                src="${post.isLiked ? '/icons/heart-filled.svg' : '/icons/heart.svg'}"
+                alt="Лайк"
+              >
+
+              <span>${post.likesCount ?? 0}</span>
+            </div>
+
+            <div class="post-card-menu" style="position: relative;">
+
+              <span
+                onclick="event.stopPropagation(); togglePostCardMenu(event, '${post.id}')"
+                style="cursor: pointer; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px;"
+                title="Меню"
+              >
+                <img
+                  src="/icons/ellipsis.svg"
+                  alt="Меню"
+                  style="width: 27px; height: 27px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));"
+                >
+              </span>
+
+              <div
+                class="post-card-dropdown"
+                id="postCardDropdown-${post.id}"
+                style="display: none; position: absolute; bottom: 100%; right: 0; background: white; border-radius: 12px; box-shadow: 0 8px 24px rgba(255, 103, 166, 0.2); min-width: 150px; z-index: 100; overflow: hidden; margin-bottom: 8px;"
+              >
+
+                <button
+                  onclick="event.stopPropagation(); openEditPostModalFromCard('${post.id}')"
+                  style="display: flex; align-items: center; gap: 8px; padding: 10px 16px; border: none; background: none; width: 100%; cursor: pointer; color: #FF67A6; font-size: 13px; font-weight: 600; border-bottom: 1px solid rgba(255, 103, 166, 0.1);"
+                >
+                  <img src="/icons/pencil.svg" alt="Редактировать" style="width: 16px; height: 16px;">
+                  Редактировать
+                </button>
+
+                <button
+                  onclick="event.stopPropagation(); deletePostFromCard('${post.id}')"
+                  style="display: flex; align-items: center; gap: 8px; padding: 10px 16px; border: none; background: none; width: 100%; cursor: pointer; color: #FF4444; font-size: 13px; font-weight: 600;"
+                >
+                  <img src="/icons/trash.svg" alt="Удалить" style="width: 16px; height: 16px;">
+                  Удалить
+                </button>
+
+              </div>
+
+            </div>
+
+          </div>
+        `
+    }
+
+  </div>
+`).join('');
     } else {
       profileGrid.innerHTML = `<div class="section-placeholder" style="grid-column:1/-1;">✨ Нет публикаций ✨</div>`;
     }
@@ -862,30 +926,56 @@ ${
                     : "/icons/blank_pfp.jpg";
 
                   return `
-<div class="profile-shop-card" onclick="openProductAdModal('${ad.id}')">
+<div class="profile-shop-card ${ad.isHidden ? "hidden-product-card" : ""}" onclick="${ad.isHidden ? "" : `openProductAdModal('${ad.id}')`}">
 
   <div class="shop-card-image-wrapper">
     <img src="${imageUrl}" alt="${ad.title}">
     <div class="shop-card-overlay"></div>
 
-    <div class="product-card-menu"
-         onclick="event.stopPropagation(); toggleProductCardMenu(event, '${ad.id}')">
-      <img src="/icons/ellipsis.svg" alt="Меню">
+    ${
+      ad.isHidden
+        ? `
+          <div class="hidden-product-overlay">
+            <div class="hidden-product-message">
+              <strong>Объявление скрыто модератором</strong>
+              <span>${ad.hiddenReason || "Причина не указана"}</span>
+            </div>
 
-
-    </div>
+            <button
+              class="hidden-product-delete-btn"
+              onclick="event.stopPropagation(); deleteProductAdFromProfile('${ad.id}')"
+            >
+              <img src="/icons/trash.svg" alt="Удалить">
+            </button>
+          </div>
+        `
+        : `
+          <div class="product-card-menu"
+               onclick="event.stopPropagation(); toggleProductCardMenu(event, '${ad.id}')">
+            <img src="/icons/ellipsis.svg" alt="Меню">
+          </div>
+        `
+    }
   </div>
-        <div class="product-card-dropdown" id="productCardDropdown-${ad.id}">
-        <button onclick="event.stopPropagation(); openEditProductAdModal('${ad.id}')">
-          <img src="/icons/pencil.svg" alt="">
-          Редактировать
-        </button>
 
-        <button class="danger" onclick="event.stopPropagation(); deleteProductAdFromProfile('${ad.id}')">
-          <img src="/icons/trash.svg" alt="">
-          Удалить
-        </button>
-      </div>
+  ${
+    ad.isHidden
+      ? ""
+      : `
+        <div class="product-card-dropdown" id="productCardDropdown-${ad.id}">
+          <button onclick="event.stopPropagation(); openEditProductAdModal('${ad.id}')">
+            <img src="/icons/pencil.svg" alt="">
+            Редактировать
+          </button>
+
+          <button class="danger" onclick="event.stopPropagation(); deleteProductAdFromProfile('${ad.id}')">
+            <img src="/icons/trash.svg" alt="">
+            Удалить
+          </button>
+        </div>
+      `
+  }
+
   <div class="profile-shop-price">${ad.price}р</div>
   <div class="profile-shop-title">${ad.title}</div>
 </div>

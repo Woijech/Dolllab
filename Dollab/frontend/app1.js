@@ -80,19 +80,61 @@ async function login() {
     body: JSON.stringify({ login, password })
   });
 
-  if (!response.ok) {
+if (!response.ok) {
+  let errorData = null;
+
+  try {
+    errorData = await response.json();
+  } catch {
     alert("Ошибка входа");
     return;
   }
 
+  if (errorData.message === "Ваш аккаунт заблокирован") {
+    alert(
+      `Ваш аккаунт заблокирован.\n\nПричина: ${
+        errorData.reason || "Не указана"
+      }`
+    );
+
+    return;
+  }
+
+  if (errorData.message === "Ваш аккаунт временно заблокирован") {
+    const blockedUntil = errorData.blockedUntil
+      ? new Date(errorData.blockedUntil).toLocaleString("ru-RU")
+      : "неизвестно";
+
+    alert(
+      `Ваш аккаунт временно заблокирован.\n\nДо: ${blockedUntil}\n\nПричина: ${
+        errorData.reason || "Не указана"
+      }`
+    );
+
+    return;
+  }
+
+  alert(
+    typeof errorData === "string"
+      ? errorData
+      : errorData.message || "Неверный логин или пароль"
+  );
+
+  return;
+}
+
   const data = await response.json();
 
-localStorage.setItem("token", data.token);
-localStorage.setItem("userId", data.userId);
-localStorage.setItem("username", data.username);
-localStorage.setItem("role", data.role);
+  localStorage.setItem("token", data.token);
+  localStorage.setItem("userId", data.userId);
+  localStorage.setItem("username", data.username);
+  localStorage.setItem("role", data.role);
 
-  window.location.href = "newmainpage1.html";
+  if (data.role === "Admin") {
+    window.location.href = "adminpage.html";
+  } else {
+    window.location.href = "newmainpage1.html";
+  }
 }
 
 async function register() {
@@ -125,14 +167,6 @@ async function register() {
     console.error(error);
     alert("Server error");
   }
-}
-
-// Функция для восстановления пароля
-function forgotPassword() {
-    const email = prompt('Введите ваш email для восстановления пароля:');
-    if (email) {
-        alert(`Инструкция по восстановлению пароля отправлена на email: ${email}\n(Это демонстрация, в реальном приложении была бы отправка email)`);
-    }
 }
 
 // Инициализация при загрузке страницы

@@ -81,7 +81,6 @@ public class ProfileController : ControllerBase
         if (user == null)
             return NotFound();
 
-        // 🧠 BIO
         if (dto.ClearBio)
         {
             user.Bio = null;
@@ -96,10 +95,8 @@ public class ProfileController : ControllerBase
             user.Bio = string.IsNullOrWhiteSpace(trimmedBio) ? null : trimmedBio;
         }
 
-        // 🗑 УДАЛЕНИЕ АВАТАРКИ
         if (dto.RemoveAvatar)
         {
-            // удаляем файл с диска (если есть)
             if (!string.IsNullOrEmpty(user.AvatarUrl))
             {
                 var filePath = Path.Combine(
@@ -115,7 +112,6 @@ public class ProfileController : ControllerBase
             user.AvatarUrl = null;
         }
 
-        // 📸 НОВАЯ АВАТАРКА
         if (dto.Avatar != null)
         {
             var folder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/avatars");
@@ -251,7 +247,14 @@ public class ProfileController : ControllerBase
             });
         }
 
-        var posts = user.Posts
+        var postsQuery = user.Posts.AsQueryable();
+
+        if (currentUserId != id)
+        {
+            postsQuery = postsQuery.Where(p => !p.IsHidden);
+        }
+
+        var posts = postsQuery
             .OrderByDescending(p => p.CreatedAt)
             .Select(p => new UserPostDto
             {
@@ -259,9 +262,13 @@ public class ProfileController : ControllerBase
                 ImageUrl = p.ImageUrl,
                 Description = p.Description,
                 CreatedAt = p.CreatedAt,
+
                 LikesCount = p.Likes.Count,
                 IsLiked = p.Likes.Any(l => l.UserId == currentUserId),
-                IsFavorited = p.Favorites.Any(f => f.UserId == currentUserId)
+                IsFavorited = p.Favorites.Any(f => f.UserId == currentUserId),
+
+                IsHidden = p.IsHidden,
+                HiddenReason = p.HiddenReason
             })
             .ToList();
 
@@ -302,7 +309,7 @@ public class ProfileController : ControllerBase
                 AvatarUrl = u.AvatarUrl ?? "",
                 Bio = u.Bio ?? ""
             })
-            .Take(20) // ограничение
+            .Take(30) 
             .ToListAsync();
 
         return Ok(users);

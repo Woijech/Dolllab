@@ -18,13 +18,11 @@ namespace Dollab_Backend.Controllers
             _context = context;
         }
 
-        // ===== Получить все куклы (доступно всем) =====
         [HttpGet]
         public async Task<IActionResult> GetAll([FromQuery] DollFilterDto filter)
         {
             var query = _context.Dolls.AsQueryable();
 
-            // 🔍 Поиск
             if (!string.IsNullOrWhiteSpace(filter.Search))
             {
                 query = query.Where(d =>
@@ -34,19 +32,16 @@ namespace Dollab_Backend.Controllers
                 );
             }
 
-            // 🏷 Бренд
             if (!string.IsNullOrWhiteSpace(filter.Brand))
             {
                 query = query.Where(d => d.Brand == filter.Brand);
             }
 
-            // 📦 Серия
             if (!string.IsNullOrWhiteSpace(filter.Series))
             {
                 query = query.Where(d => d.Series == filter.Series);
             }
 
-            // 📅 Год выпуска
             if (filter.ReleaseYear.HasValue)
             {
                 query = query.Where(d => d.ReleaseYear == filter.ReleaseYear);
@@ -94,7 +89,6 @@ namespace Dollab_Backend.Controllers
         }
 
 
-        // ===== Получить куклу по ID (доступно всем) =====
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
@@ -105,18 +99,41 @@ namespace Dollab_Backend.Controllers
             return Ok(doll);
         }
 
-        // ===== Добавить куклу (ТОЛЬКО Admin) =====
         [HttpPost]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> AddDoll(CreateDollDto dto)
+        public async Task<IActionResult> AddDoll([FromForm] CreateDollDto dto)
         {
+            string? imageUrl = dto.ImageUrl;
+
+            if (dto.Image != null)
+            {
+                var folder = Path.Combine(
+                    Directory.GetCurrentDirectory(),
+                    "wwwroot",
+                    "images",
+                    "dollpedia_dolls"
+                );
+                if (!Directory.Exists(folder))
+                    Directory.CreateDirectory(folder);
+
+                var fileName = $"{Guid.NewGuid()}{Path.GetExtension(dto.Image.FileName)}";
+                var filePath = Path.Combine(folder, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await dto.Image.CopyToAsync(stream);
+                }
+
+                imageUrl = $"/images/dollpedia_dolls/{fileName}";
+            }
+
             var doll = new Doll
             {
                 Name = dto.Name,
                 Brand = dto.Brand,
                 Series = dto.Series,
                 Description = dto.Description,
-                ImageUrl = dto.ImageUrl,
+                ImageUrl = imageUrl,
                 ReleaseYear = dto.ReleaseYear
             };
 
@@ -126,8 +143,6 @@ namespace Dollab_Backend.Controllers
             return Ok(doll);
         }
 
-
-        // ===== Обновить куклу (ТОЛЬКО Admin) =====
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Update(int id, Doll updatedDoll)
@@ -150,8 +165,6 @@ namespace Dollab_Backend.Controllers
             return NoContent();
         }
 
-
-        // ===== Удалить куклу (ТОЛЬКО Admin) =====
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)

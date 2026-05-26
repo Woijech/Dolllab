@@ -12,6 +12,8 @@
         public int LikesCount { get; set; }
         public bool IsLiked { get; set; }
         public bool IsFavorited { get; set; }
+        public bool IsHidden { get; set; }
+        public string? HiddenReason { get; set; }
 
     }
 }
