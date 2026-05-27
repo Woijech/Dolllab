@@ -587,13 +587,13 @@
   color: #FF67A6;
   border-radius: 999px;
   padding: 7px 12px;
-  font-weight: 900;
+  font-weight: 800;
 }
 
 .admin-status {
   padding: 7px 12px;
   border-radius: 999px;
-  font-weight: 900;
+  font-weight: 800;
   display: inline-block;
 }
 

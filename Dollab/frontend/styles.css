@@ -2651,7 +2651,7 @@ body,
 .cart-item-title {
   color: #FF67A6;
   font-size: 16px;
-  font-weight: 900;
+  font-weight: 800;
 }
 
 .cart-item-category,
@@ -2664,7 +2664,7 @@ body,
 .cart-item-price {
   color: #FF4F9A;
   font-size: 18px;
-  font-weight: 900;
+  font-weight: 800;
 }
 
 .cart-clear-btn {
@@ -2994,7 +2994,7 @@ body,
 
 .notification-text span {
   color: #FF67A6;
-  font-weight: 900;
+  font-weight: 800;
   cursor: pointer;
 }
 
@@ -4980,4 +4980,178 @@ body.dark-theme .hidden-product-overlay {
 
 body.dark-theme .hidden-product-message {
   color: #FEB6E7;
+}
+
+.report-user-modal-content {
+  max-width: 500px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.report-user-title {
+  color: #FF67A6;
+  text-align: center;
+  margin-bottom: 6px;
+}
+
+body.dark-theme .report-user-title {
+  color: #FEB6E7;
+}
+
+.my-reports-modal-content {
+  max-width: 620px;
+  max-height: 80vh;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: stretch;
+}
+
+.my-reports-title {
+  text-align: center;
+  color: #FF67A6;
+
+  margin-bottom: 18px;
+
+  width: 100%;
+}
+
+.my-reports-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 520px;
+  overflow-y: auto;
+}
+
+.my-report-item {
+  background: #FFFAFD;
+  border-radius: 18px;
+  padding: 14px;
+}
+
+.my-report-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.my-report-user img {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.my-report-user h4,
+.my-report-reason,
+.my-report-status {
+  color: #FF67A6;
+  font-weight: 700;
+}
+
+.my-report-user span,
+.my-report-status,
+.my-report-description {
+  color: #F4A6C9;
+  font-size: 14px;
+}
+
+
+body.dark-theme .my-report-reason,
+body.dark-theme .my-report-status {
+  color: #DFC3FF;
+}
+body.dark-theme .my-report-user h4,
+body.dark-theme .my-reports-title{
+    color: #FEB6E7;
+}
+
+
+body.dark-theme .my-report-item {
+  background: #271F38;
+}
+
+body.dark-theme .my-report-user span,
+body.dark-theme .my-report-description {
+  color: #CFC3EA;
+}
+
+.report-user-link {
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.report-user-link:hover {
+text-decoration: underline;
+}
+
+.my-report-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  margin-top: 10px;
+}
+
+.my-report-label {
+  color: #FF67A6;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+body.dark-theme .my-report-label {
+  color: #FEB6E7;
+}
+
+.product-ad-report-icon-btn {
+  position: absolute;
+
+  top: 60px;
+  right: 13px;
+
+  width: 32px;
+  height: 32px;
+
+  border: none;
+  background: transparent;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+
+  z-index: 1200;
+
+  transition:
+    transform 0.2s ease,
+    opacity 0.2s ease;
+
+  padding: 0;
+}
+
+.product-ad-report-icon-btn:hover {
+  transform: scale(1.12);
+}
+
+.product-ad-report-icon-btn img {
+  width: 25px;
+  height: 25px;
+  object-fit: contain;
+}
+
+body.dark-theme .product-ad-report-icon-btn img {
+  filter:
+    brightness(0)
+    saturate(100%)
+    invert(87%)
+    sepia(18%)
+    saturate(796%)
+    hue-rotate(286deg)
+    brightness(102%)
+    contrast(98%);
 }

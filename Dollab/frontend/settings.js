@@ -249,3 +249,17 @@ async function getBlockedUsers() {
 
   return await res.json();
 }
+
+async function getMyReports() {
+  const token = localStorage.getItem("token");
+
+  const res = await fetch(`${API_URL}/api/reports/my`, {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
+
+  if (!res.ok) return [];
+
+  return await res.json();
+}

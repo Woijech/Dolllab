@@ -26,6 +26,7 @@ public class AppDbContext : DbContext
     public DbSet<Notification> Notifications { get; set; }
     public DbSet<FollowRequest> FollowRequests { get; set; }
     public DbSet<BlockedUser> BlockedUsers { get; set; }
+    public DbSet<Report> Reports { get; set; }
 
     public AppDbContext(DbContextOptions<AppDbContext> options)
         : base(options)

@@ -151,3 +151,26 @@ async function getFollowing(userId) {
 
   return await res.json();
 }
+
+async function reportUser(userId, reason, description) {
+  const token = localStorage.getItem("token");
+
+  const res = await fetch(`${API_URL}/api/profile/${userId}/report`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      reason,
+      description
+    })
+  });
+
+  if (!res.ok) {
+    alert(await res.text());
+    return null;
+  }
+
+  return await res.json();
+}

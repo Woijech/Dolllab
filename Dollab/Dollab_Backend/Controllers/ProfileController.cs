@@ -502,4 +502,52 @@ public class ProfileController : ControllerBase
 
         return Ok(user);
     }
+    [HttpPost("{id}/report")]
+    [Authorize]
+    public async Task<IActionResult> ReportUser(int id, CreateUserReportDto dto)
+    {
+        var currentUserId = User.GetUserId();
+
+        if (currentUserId == id)
+            return BadRequest("Нельзя пожаловаться на самого себя");
+
+        var reportedUser = await _context.Users
+            .FirstOrDefaultAsync(u => u.Id == id);
+
+        if (reportedUser == null)
+            return NotFound("Пользователь не найден");
+
+        if (string.IsNullOrWhiteSpace(dto.Reason))
+            return BadRequest("Укажите причину жалобы");
+
+        var alreadyReported = await _context.Reports
+            .AnyAsync(r =>
+                r.ReporterId == currentUserId &&
+                r.ReportedUserId == id &&
+                r.Status == ReportStatus.Pending);
+
+        if (alreadyReported)
+            return BadRequest("Вы уже отправили жалобу на этого пользователя");
+
+        var report = new Report
+        {
+            ReporterId = currentUserId,
+            ReportedUserId = id,
+            Type = ReportType.User,
+            Reason = dto.Reason.Trim(),
+            Description = string.IsNullOrWhiteSpace(dto.Description)
+                ? null
+                : dto.Description.Trim(),
+            Status = ReportStatus.Pending,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _context.Reports.Add(report);
+        await _context.SaveChangesAsync();
+
+        return Ok(new
+        {
+            message = "Жалоба отправлена"
+        });
+    }
 }

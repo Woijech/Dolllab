@@ -11,6 +11,7 @@ let shopFilters = {
   search: ""
 };
 let cartProductIds = new Set();
+let currentPostId = null;
 
 const contentArea = document.getElementById("contentArea");
 const menuItems = document.querySelectorAll(".item");
@@ -24,6 +25,7 @@ const yearFilter = document.getElementById("yearFilter");
 const userSearchWrapper = document.querySelector(".user-search-wrapper");
 const userSearchInput = document.getElementById("userSearchInput");
 const userClearIcon = document.getElementById("userClearIcon");
+
 
 // ===== Модальное окно просмотра поста =====
 function createPostViewModal() {
@@ -70,6 +72,14 @@ function createPostViewModal() {
 <span class="action-icon" title="Избранное" id="postModalFavoriteBtn">
   <img src="/icons/bookmark.svg" alt="Избранное" style="width: 22px; height: 22px;">
 </span>
+      <span
+        class="action-icon"
+        title="Пожаловаться"
+        onclick="openReportContentModal('post', currentPostId)"
+      >
+        <img src="/icons/flag.svg" alt="Жалоба" style="width: 21px; height: 21px;">
+      </span>
+
                 </div>
               </div>
               
@@ -91,6 +101,7 @@ function createPostViewModal() {
 
 async function openPostModal(postId) {
   try {
+    currentPostId = postId;
     const post = await getPostById(postId);
     console.log('📱 Открываем пост:', post);
 
@@ -1514,6 +1525,17 @@ settingsBtn?.addEventListener("click", async () => {
     </button>
   </div>
 </div>
+
+<div class="settings-card account-settings-card">
+  <div class="settings-card-header">
+    <h3>Мои жалобы</h3>
+    <p>История отправленных жалоб</p>
+  </div>
+
+  <button class="account-settings-btn" onclick="openMyReportsModal()">
+    Посмотреть жалобы
+  </button>
+</div>
     </div>
   `;
 
@@ -1757,8 +1779,12 @@ if (user.isBlocked) {
     </button>
 
     <div class="other-profile-dropdown" id="otherProfileDropdown">
+      <button onclick="event.stopPropagation(); openReportUserModal('${userId}')">
+        Пожаловаться
+      </button>
+
       <button onclick="event.stopPropagation(); blockUserFromProfile('${userId}')">
-        Заблокировать
+        Заблокировать пользователя
       </button>
     </div>
   </div>
@@ -2205,6 +2231,7 @@ async function renderHomeFeed() {
           <div class="feed-post-header" onclick="openUserProfile('${post.user.id}')">
             <img src="${post.user.avatarUrl ? `https://localhost:7145${post.user.avatarUrl}` : '/icons/blank_pfp.jpg'}" alt="Аватар">
             <span>${post.user.username}</span>
+            
           </div>
 <div class="feed-post-image-wrapper">
           <img 
@@ -2225,6 +2252,10 @@ async function renderHomeFeed() {
 
             <button onclick="toggleFeedFavorite(event, '${post.id}')">
               <img src="${post.isFavorite ? '/icons/bookmark-filled.svg' : '/icons/bookmark.svg'}" alt="Избранное">
+            </button>
+
+            <button onclick="event.stopPropagation(); openReportContentModal('post', '${post.id}')">
+              <img src="/icons/flag.svg" alt="Жалоба">
             </button>
           </div>
 
@@ -2715,6 +2746,13 @@ function createProductAdViewModal() {
 
       <div class="modal-content product-ad-modal-content">
         <img src="/icons/cross.svg" class="modal-close-icon" id="productAdClose" alt="Закрыть">
+          <button
+            class="product-ad-report-icon-btn"
+            id="productAdReportBtn"
+            title="Пожаловаться"
+          >
+            <img src="/icons/flag.svg" alt="Жалоба">
+          </button>
 
         <div class="product-ad-image-side">
           <button class="product-ad-arrow left" id="productAdPrev">‹</button>
@@ -2738,8 +2776,8 @@ function createProductAdViewModal() {
 
           <p class="product-ad-description" id="productAdDescription"></p>
           <button class="product-add-cart-btn" id="productAddToCartBtn">
-  Добавить в корзину
-</button>
+            Добавить в корзину
+          </button>
         </div>
       </div>
     </div>
@@ -2830,6 +2868,25 @@ if (addCartBtn) {
 
       addCartBtn.textContent = "Уже в корзине";
       addCartBtn.disabled = true;
+    };
+  }
+}
+
+const reportBtn = document.getElementById("productAdReportBtn");
+
+if (reportBtn) {
+  const currentUserId = Number(localStorage.getItem("userId"));
+  const isOwnProduct = currentUserId === Number(ad.userId);
+
+  if (isOwnProduct) {
+    reportBtn.style.display = "none";
+  } else {
+    reportBtn.style.display = "flex";
+
+    reportBtn.onclick = (event) => {
+      event.stopPropagation();
+
+      openReportContentModal("productAd", ad.id);
     };
   }
 }
@@ -3725,6 +3782,282 @@ window.unblockUserFromList = async function(userId) {
   if (!result) return;
 
   await openBlacklistModal();
+};
+
+window.openReportUserModal = function(userId) {
+  let modal = document.getElementById("reportUserModal");
+
+  if (!modal) {
+    document.body.insertAdjacentHTML("beforeend", `
+      <div class="modal hidden" id="reportUserModal">
+        <div class="modal-overlay" onclick="closeReportUserModal()"></div>
+
+        <div class="modal-content report-user-modal-content">
+          <img src="/icons/cross.svg" class="modal-close-icon" onclick="closeReportUserModal()" alt="Закрыть">
+
+          <h2 class="report-user-title">Пожаловаться на пользователя</h2>
+
+          <input
+            id="reportUserReason"
+            class="edit-profile-input"
+            placeholder="Причина жалобы"
+          >
+
+          <textarea
+            id="reportUserDescription"
+            class="edit-profile-textarea"
+            placeholder="Описание (необязательно)"
+          ></textarea>
+
+          <button class="file-upload-btn" onclick="sendUserReport()">
+            Отправить жалобу
+          </button>
+        </div>
+      </div>
+    `);
+
+    modal = document.getElementById("reportUserModal");
+  }
+
+  modal.dataset.userId = userId;
+
+  document.getElementById("reportUserReason").value = "";
+  document.getElementById("reportUserDescription").value = "";
+
+  modal.classList.remove("hidden");
+  modal.classList.add("show");
+};
+
+window.closeReportUserModal = function() {
+  const modal = document.getElementById("reportUserModal");
+  if (!modal) return;
+
+  modal.classList.add("hidden");
+  modal.classList.remove("show");
+};
+
+window.sendUserReport = async function() {
+  const modal = document.getElementById("reportUserModal");
+  const userId = modal.dataset.userId;
+
+  const reason = document.getElementById("reportUserReason").value.trim();
+  const description = document.getElementById("reportUserDescription").value.trim();
+
+  if (!reason) {
+    alert("Укажите причину жалобы");
+    return;
+  }
+
+  const result = await reportUser(userId, reason, description);
+
+  if (!result) return;
+
+  alert("Жалоба отправлена");
+  closeReportUserModal();
+};
+
+window.openMyReportsModal = async function() {
+  const reports = await getMyReports();
+
+  let modal = document.getElementById("myReportsModal");
+
+  if (!modal) {
+    document.body.insertAdjacentHTML("beforeend", `
+      <div class="modal hidden" id="myReportsModal">
+        <div class="modal-overlay" onclick="closeMyReportsModal()"></div>
+
+        <div class="modal-content my-reports-modal-content">
+          <img src="/icons/cross.svg" class="modal-close-icon" onclick="closeMyReportsModal()" alt="Закрыть">
+
+          <h2 class="my-reports-title">Мои жалобы</h2>
+
+          <div class="my-reports-list" id="myReportsList"></div>
+        </div>
+      </div>
+    `);
+
+    modal = document.getElementById("myReportsModal");
+  }
+
+  const list = document.getElementById("myReportsList");
+
+list.innerHTML = reports.length > 0
+  ? reports.map(report => {
+      const targetHtml = report.reportedUser
+        ? `
+          <div class="my-report-user">
+            <img src="${
+              report.reportedUser.avatarUrl
+                ? `https://localhost:7145${report.reportedUser.avatarUrl}`
+                : "/icons/blank_pfp.jpg"
+            }">
+
+            <div>
+              <h4
+                class="report-user-link"
+                onclick="openUserProfile('${report.reportedUser.id}')"
+              >
+                ${report.reportedUser.username}
+              </h4>
+
+              <span>${new Date(report.createdAt).toLocaleDateString("ru-RU")}</span>
+            </div>
+          </div>
+        `
+        : `
+          <div class="my-report-user">
+            <div>
+              <h4>
+                ${
+                  report.reportedPost
+                    ? "Жалоба на пост"
+                    : report.reportedProductAd
+                      ? `Жалоба на объявление: ${report.reportedProductAd.title}`
+                      : "Жалоба"
+                }
+              </h4>
+
+              <span>${new Date(report.createdAt).toLocaleDateString("ru-RU")}</span>
+            </div>
+          </div>
+        `;
+
+      return `
+        <div class="my-report-item">
+          ${targetHtml}
+
+          <div class="my-report-field">
+            <span class="my-report-label">Причина жалобы:</span>
+
+            <div class="my-report-reason">
+              ${report.reason}
+            </div>
+          </div>
+
+          <div class="my-report-field">
+            <span class="my-report-label">Описание:</span>
+
+            <div class="my-report-description">
+              ${report.description || "Описание не указано"}
+            </div>
+          </div>
+
+          <div class="my-report-field">
+            <span class="my-report-label">Статус:</span>
+
+            <div class="my-report-status">
+              ${getReportStatusText(report.status)}
+            </div>
+          </div>
+        </div>
+      `;
+    }).join("")
+  : `<div class="section-placeholder">Вы пока не отправляли жалобы</div>`;
+
+  modal.classList.remove("hidden");
+  modal.classList.add("show");
+};
+
+window.closeMyReportsModal = function() {
+  const modal = document.getElementById("myReportsModal");
+  if (!modal) return;
+
+  modal.classList.add("hidden");
+  modal.classList.remove("show");
+};
+function getReportStatusText(status) {
+  switch (status) {
+    case 0:
+      return "На рассмотрении";
+
+    case 1:
+      return "Рассмотрена";
+
+    case 2:
+      return "Отклонена";
+
+    default:
+      return "Неизвестно";
+  }
+}
+
+window.openReportContentModal = function(type, id) {
+  let modal = document.getElementById("reportContentModal");
+
+  if (!modal) {
+    document.body.insertAdjacentHTML("beforeend", `
+      <div class="modal hidden" id="reportContentModal">
+        <div class="modal-overlay" onclick="closeReportContentModal()"></div>
+
+        <div class="modal-content report-user-modal-content">
+          <img src="/icons/cross.svg" class="modal-close-icon" onclick="closeReportContentModal()" alt="Закрыть">
+
+          <h2 class="report-user-title" id="reportContentTitle">Пожаловаться</h2>
+
+          <input
+            id="reportContentReason"
+            class="edit-profile-input"
+            placeholder="Причина жалобы"
+          >
+
+          <textarea
+            id="reportContentDescription"
+            class="edit-profile-textarea"
+            placeholder="Описание (необязательно)"
+          ></textarea>
+
+          <button class="file-upload-btn" onclick="sendContentReport()">
+            Отправить жалобу
+          </button>
+        </div>
+      </div>
+    `);
+
+    modal = document.getElementById("reportContentModal");
+  }
+
+  modal.dataset.reportType = type;
+  modal.dataset.reportId = id;
+
+  document.getElementById("reportContentTitle").textContent =
+    type === "post" ? "Пожаловаться на пост" : "Пожаловаться на объявление";
+
+  document.getElementById("reportContentReason").value = "";
+  document.getElementById("reportContentDescription").value = "";
+
+  modal.classList.remove("hidden");
+  modal.classList.add("show");
+};
+
+window.closeReportContentModal = function() {
+  const modal = document.getElementById("reportContentModal");
+  if (!modal) return;
+
+  modal.classList.add("hidden");
+  modal.classList.remove("show");
+};
+
+window.sendContentReport = async function() {
+  const modal = document.getElementById("reportContentModal");
+  const type = modal.dataset.reportType;
+  const id = modal.dataset.reportId;
+
+  const reason = document.getElementById("reportContentReason").value.trim();
+  const description = document.getElementById("reportContentDescription").value.trim();
+
+  if (!reason) {
+    alert("Укажите причину жалобы");
+    return;
+  }
+
+  const result = type === "post"
+    ? await reportPost(id, reason, description)
+    : await reportProductAd(id, reason, description);
+
+  if (!result) return;
+
+  alert("Жалоба отправлена");
+  closeReportContentModal();
 };
 // ===== Инициализация =====
 initTheme();
