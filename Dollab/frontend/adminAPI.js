@@ -355,3 +355,66 @@ async function unhideAdminProductAd(id) {
 
   return true;
 }
+
+const API_ADMIN_REPORTS = `${API_URL}/api/admin/reports`;
+
+async function getAdminReports(status = null) {
+  const token = localStorage.getItem("token");
+
+  const url = status === null
+    ? API_ADMIN_REPORTS
+    : `${API_ADMIN_REPORTS}?status=${status}`;
+
+  const res = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
+
+  if (!res.ok) {
+    console.error("Ошибка загрузки жалоб:", await res.text());
+    return [];
+  }
+
+  return await res.json();
+}
+
+async function reviewAdminReport(id, adminComment) {
+  const token = localStorage.getItem("token");
+
+  const res = await fetch(`${API_ADMIN_REPORTS}/${id}/review`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({ adminComment })
+  });
+
+  if (!res.ok) {
+    alert(await res.text());
+    return null;
+  }
+
+  return true;
+}
+
+async function rejectAdminReport(id, adminComment) {
+  const token = localStorage.getItem("token");
+
+  const res = await fetch(`${API_ADMIN_REPORTS}/${id}/reject`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({ adminComment })
+  });
+
+  if (!res.ok) {
+    alert(await res.text());
+    return null;
+  }
+
+  return true;
+}

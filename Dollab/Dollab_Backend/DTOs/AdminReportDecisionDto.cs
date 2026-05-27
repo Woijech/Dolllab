@@ -2,5 +2,7 @@
 {
     public class AdminReportDecisionDto
     {
+        public string? AdminComment { get; set; }
+
     }
 }

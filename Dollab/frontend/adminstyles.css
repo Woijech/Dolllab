@@ -761,3 +761,29 @@
   transform: translateY(-2px);
   box-shadow: 0 10px 22px rgba(255, 103, 166, 0.18);
 }
+
+.admin-no-active-reports {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 180px;
+
+  text-align: center;
+
+  color: #FF67A6;
+  font-size: 18px;
+  font-weight: 700;
+}
+.admin-card-header button {
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.admin-card-header button:hover {
+  color: #FF67A6;
+  transform: translateY(-2px);
+  opacity: 1;
+}

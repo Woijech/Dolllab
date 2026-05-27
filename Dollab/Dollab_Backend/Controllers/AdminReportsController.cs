@@ -1,83 +1,201 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Dollab_Backend.Data;
+using Dollab_Backend.DTOs;
+using Dollab_Backend.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Dollab_Backend.Controllers
 {
-    public class AdminReportsController : Controller
+    [Route("api/admin/reports")]
+    [ApiController]
+    [Authorize(Roles = "Admin")]
+    public class AdminReportsController : ControllerBase
     {
-        // GET: AdminReportsController
-        public ActionResult Index()
+        private readonly AppDbContext _context;
+
+        public AdminReportsController(AppDbContext context)
         {
-            return View();
+            _context = context;
         }
 
-        // GET: AdminReportsController/Details/5
-        public ActionResult Details(int id)
+        [HttpGet]
+        public async Task<IActionResult> GetReports([FromQuery] ReportStatus? status)
         {
-            return View();
-        }
+            var query = _context.Reports
+                .Include(r => r.Reporter)
+                .Include(r => r.ReportedUser)
+                .Include(r => r.ReportedPost)
+                    .ThenInclude(p => p.User)
+                .Include(r => r.ReportedProductAd)
+                    .ThenInclude(a => a.User)
+                .AsQueryable();
 
-        // GET: AdminReportsController/Create
-        public ActionResult Create()
-        {
-            return View();
-        }
-
-        // POST: AdminReportsController/Create
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Create(IFormCollection collection)
-        {
-            try
+            if (status.HasValue)
             {
-                return RedirectToAction(nameof(Index));
+                query = query.Where(r => r.Status == status.Value);
             }
-            catch
-            {
-                return View();
-            }
+
+            var reports = await query
+                .OrderByDescending(r => r.CreatedAt)
+                .Select(r => new
+                {
+                    r.Id,
+                    r.Type,
+                    r.Reason,
+                    r.Description,
+                    r.Status,
+                    r.CreatedAt,
+                    r.AdminComment,
+                    r.ReviewedAt,
+
+                    Reporter = new
+                    {
+                        r.Reporter.Id,
+                        r.Reporter.Username,
+                        AvatarUrl = r.Reporter.AvatarUrl ?? ""
+                    },
+
+                    ReportedUser = r.ReportedUser == null ? null : new
+                    {
+                        r.ReportedUser.Id,
+                        r.ReportedUser.Username,
+                        AvatarUrl = r.ReportedUser.AvatarUrl ?? ""
+                    },
+
+                    ReportedPost = r.ReportedPost == null ? null : new
+                    {
+                        r.ReportedPost.Id,
+                        r.ReportedPost.Description,
+                        r.ReportedPost.ImageUrl,
+                        r.ReportedPost.IsHidden,
+                        Author = new
+                        {
+                            r.ReportedPost.User.Id,
+                            r.ReportedPost.User.Username
+                        }
+                    },
+
+                    ReportedProductAd = r.ReportedProductAd == null ? null : new
+                    {
+                        r.ReportedProductAd.Id,
+                        r.ReportedProductAd.Title,
+                        r.ReportedProductAd.Price,
+                        r.ReportedProductAd.IsHidden,
+                        Author = new
+                        {
+                            r.ReportedProductAd.User.Id,
+                            r.ReportedProductAd.User.Username
+                        }
+                    }
+                })
+                .ToListAsync();
+
+            return Ok(reports);
         }
 
-        // GET: AdminReportsController/Edit/5
-        public ActionResult Edit(int id)
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetReport(int id)
         {
-            return View();
+            var report = await _context.Reports
+                .Include(r => r.Reporter)
+                .Include(r => r.ReportedUser)
+                .Include(r => r.ReportedPost)
+                    .ThenInclude(p => p.User)
+                .Include(r => r.ReportedProductAd)
+                    .ThenInclude(a => a.User)
+                .Where(r => r.Id == id)
+                .Select(r => new
+                {
+                    r.Id,
+                    r.Type,
+                    r.Reason,
+                    r.Description,
+                    r.Status,
+                    r.CreatedAt,
+                    r.AdminComment,
+                    r.ReviewedAt,
+
+                    Reporter = new
+                    {
+                        r.Reporter.Id,
+                        r.Reporter.Username,
+                        AvatarUrl = r.Reporter.AvatarUrl ?? ""
+                    },
+
+                    ReportedUser = r.ReportedUser == null ? null : new
+                    {
+                        r.ReportedUser.Id,
+                        r.ReportedUser.Username,
+                        AvatarUrl = r.ReportedUser.AvatarUrl ?? ""
+                    },
+
+                    ReportedPost = r.ReportedPost == null ? null : new
+                    {
+                        r.ReportedPost.Id,
+                        r.ReportedPost.Description,
+                        r.ReportedPost.ImageUrl,
+                        r.ReportedPost.IsHidden,
+                        Author = new
+                        {
+                            r.ReportedPost.User.Id,
+                            r.ReportedPost.User.Username
+                        }
+                    },
+
+                    ReportedProductAd = r.ReportedProductAd == null ? null : new
+                    {
+                        r.ReportedProductAd.Id,
+                        r.ReportedProductAd.Title,
+                        r.ReportedProductAd.Price,
+                        r.ReportedProductAd.IsHidden,
+                        Author = new
+                        {
+                            r.ReportedProductAd.User.Id,
+                            r.ReportedProductAd.User.Username
+                        }
+                    }
+                })
+                .FirstOrDefaultAsync();
+
+            if (report == null)
+                return NotFound("Жалоба не найдена");
+
+            return Ok(report);
         }
 
-        // POST: AdminReportsController/Edit/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, IFormCollection collection)
+        [HttpPost("{id}/review")]
+        public async Task<IActionResult> ReviewReport(int id, AdminReportDecisionDto dto)
         {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
+            var report = await _context.Reports.FirstOrDefaultAsync(r => r.Id == id);
+
+            if (report == null)
+                return NotFound("Жалоба не найдена");
+
+            report.Status = ReportStatus.Reviewed;
+            report.AdminComment = dto.AdminComment;
+            report.ReviewedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            return Ok("Жалоба отмечена как рассмотренная");
         }
 
-        // GET: AdminReportsController/Delete/5
-        public ActionResult Delete(int id)
+        [HttpPost("{id}/reject")]
+        public async Task<IActionResult> RejectReport(int id, AdminReportDecisionDto dto)
         {
-            return View();
-        }
+            var report = await _context.Reports.FirstOrDefaultAsync(r => r.Id == id);
 
-        // POST: AdminReportsController/Delete/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, IFormCollection collection)
-        {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
+            if (report == null)
+                return NotFound("Жалоба не найдена");
+
+            report.Status = ReportStatus.Rejected;
+            report.AdminComment = dto.AdminComment;
+            report.ReviewedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            return Ok("Жалоба отклонена");
         }
     }
 }

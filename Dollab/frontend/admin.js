@@ -5,6 +5,7 @@ const defaultAdminPageHTML = adminContent.innerHTML;
 function renderAdminDashboard() {
   adminContent.innerHTML = defaultAdminPageHTML;
   loadAdminStats();
+  loadActiveReportsBlock();
 
 }
 
@@ -227,6 +228,10 @@ if (hash === "posts") {
 }
 if (hash === "product-ads") {
   await renderAdminProductAds();
+  return;
+}
+if (hash === "reports") {
+  await renderAdminReports();
   return;
 }
 
@@ -817,7 +822,10 @@ async function loadAdminStats() {
   const usersCount = document.getElementById("adminUsersCount");
   const postsCount = document.getElementById("adminPostsCount");
   const adsCount = document.getElementById("adminAdsCount");
+  const reports = await getAdminReports();
+  const reportsCount = document.getElementById("adminReportsCount");
 
+  if (reportsCount) reportsCount.textContent = reports.length;
   if (usersCount) usersCount.textContent = users.length;
   if (postsCount) postsCount.textContent = posts.length;
   if (adsCount) adsCount.textContent = ads.length;
@@ -991,6 +999,246 @@ window.unhideProductAdFromAdmin = async function(adId) {
 
   await renderAdminProductAds();
 };
+
+async function renderAdminReports() {
+  const reports = await getAdminReports();
+  const content = document.getElementById("adminContent");
+
+  content.innerHTML = `
+    <section class="admin-users-page">
+      <div class="admin-section-header">
+        <h1>Жалобы</h1>
+      </div>
+
+      <div class="admin-users-table-wrapper">
+        <table class="admin-users-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Кто отправил</th>
+              <th>На что жалоба</th>
+              <th>Причина</th>
+              <th>Описание</th>
+              <th>Дата</th>
+              <th>Статус</th>
+              <th>Действия</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            ${
+              reports.length > 0
+                ? reports.map(report => `
+                  <tr>
+                    <td>${report.id}</td>
+
+                    <td>
+                      <div class="admin-user-mini">
+                        <img
+                          class="admin-user-avatar"
+                          src="${
+                            report.reporter?.avatarUrl
+                              ? `https://localhost:7145${report.reporter.avatarUrl}`
+                              : "/icons/blank_pfp.jpg"
+                          }"
+                        >
+                        <span>${report.reporter?.username || "Пользователь"}</span>
+                      </div>
+                    </td>
+
+                    <td>${getAdminReportTargetText(report)}</td>
+
+                    <td>${report.reason || "—"}</td>
+
+                    <td class="admin-post-description">
+                      ${report.description || "Описание не указано"}
+                    </td>
+
+                    <td>
+                      ${
+                        report.createdAt
+                          ? new Date(report.createdAt).toLocaleDateString("ru-RU")
+                          : "—"
+                      }
+                    </td>
+
+                    <td>${getAdminReportStatusBadge(report.status)}</td>
+
+                    <td>
+                      <div class="admin-user-actions">
+                        <button onclick="openReviewReportModal('${report.id}', 'review')">
+                          Рассмотрена
+                        </button>
+
+                        <button onclick="openReviewReportModal('${report.id}', 'reject')">
+                          Отклонить
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                `).join("")
+                : `
+                  <tr>
+                    <td colspan="8">
+                      <div class="section-placeholder">Жалоб пока нет</div>
+                    </td>
+                  </tr>
+                `
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  `;
+}
+
+function getAdminReportTargetText(report) {
+  if (report.reportedUser) {
+    return `Пользователь: ${report.reportedUser.username}`;
+  }
+
+  if (report.reportedPost) {
+    return `Пост #${report.reportedPost.id}`;
+  }
+
+  if (report.reportedProductAd) {
+    return `Объявление: ${report.reportedProductAd.title}`;
+  }
+
+  return "Неизвестно";
+}
+
+function getAdminReportStatusBadge(status) {
+  switch (status) {
+    case 0:
+      return `<span class="admin-status blocked">На рассмотрении</span>`;
+    case 1:
+      return `<span class="admin-status active">Рассмотрена</span>`;
+    case 2:
+      return `<span class="admin-status banned">Отклонена</span>`;
+    default:
+      return `<span class="admin-status">Неизвестно</span>`;
+  }
+}
+
+window.openReviewReportModal = function(reportId, action) {
+  let modal = document.getElementById("adminReviewReportModal");
+
+  if (!modal) {
+    document.body.insertAdjacentHTML("beforeend", `
+      <div class="modal hidden" id="adminReviewReportModal">
+        <div class="modal-overlay" onclick="closeReviewReportModal()"></div>
+
+        <div class="modal-content admin-action-modal">
+          <img src="/icons/cross.svg" class="modal-close-icon" onclick="closeReviewReportModal()" alt="Закрыть">
+
+          <h2 id="adminReviewReportTitle">Решение по жалобе</h2>
+
+          <textarea
+            class="admin-textarea"
+            id="adminReportCommentInput"
+            placeholder="Комментарий администратора"
+          ></textarea>
+
+          <button class="admin-save-btn" onclick="saveReviewReportDecision()">
+            Сохранить
+          </button>
+        </div>
+      </div>
+    `);
+
+    modal = document.getElementById("adminReviewReportModal");
+  }
+
+  modal.dataset.reportId = reportId;
+  modal.dataset.action = action;
+
+  document.getElementById("adminReviewReportTitle").textContent =
+    action === "review" ? "Отметить жалобу рассмотренной" : "Отклонить жалобу";
+
+  document.getElementById("adminReportCommentInput").value = "";
+
+  modal.classList.remove("hidden");
+  modal.classList.add("show");
+};
+
+window.closeReviewReportModal = function() {
+  const modal = document.getElementById("adminReviewReportModal");
+  if (!modal) return;
+
+  modal.classList.add("hidden");
+  modal.classList.remove("show");
+};
+
+window.saveReviewReportDecision = async function() {
+  const modal = document.getElementById("adminReviewReportModal");
+
+  const reportId = modal.dataset.reportId;
+  const action = modal.dataset.action;
+  const adminComment = document.getElementById("adminReportCommentInput").value.trim();
+
+  let result;
+
+  if (action === "review") {
+    result = await reviewAdminReport(reportId, adminComment);
+  } else {
+    result = await rejectAdminReport(reportId, adminComment);
+  }
+
+  if (!result) return;
+
+  closeReviewReportModal();
+  await renderAdminReports();
+};
+
+async function getPendingAdminReports() {
+  return await getAdminReports(0);
+}
+
+async function loadActiveReportsBlock() {
+  const pendingReports = await getPendingAdminReports();
+  const list = document.getElementById("adminActiveReportsList");
+
+  if (!list) return;
+
+ list.innerHTML = pendingReports.length > 0
+  ? pendingReports.slice(0, 5).map(report => `
+    <div class="admin-report-item" onclick="navigateAdminTo('reports')">
+      <div class="admin-report-left">
+
+        <div class="admin-report-icon">
+          <img src="${
+            report.reportedUser
+              ? "/icons/users.svg"
+              : report.reportedPost
+                ? "/icons/posts.svg"
+                : "/icons/shop.svg"
+          }" alt="">
+        </div>
+
+        <div>
+          <h4>${
+            report.reportedUser
+              ? "Жалоба на пользователя"
+              : report.reportedPost
+                ? "Жалоба на пост"
+                : "Жалоба на объявление"
+          }</h4>
+
+          <p>${report.reason || "Без причины"}</p>
+        </div>
+
+      </div>
+
+      <div class="admin-report-count">!</div>
+    </div>
+  `).join("")
+  : `
+    <div class="admin-no-active-reports">
+      Активных жалоб нет
+    </div>
+  `;
+}
   handleAdminDeepLink();
 
 window.addEventListener("hashchange", handleAdminDeepLink);

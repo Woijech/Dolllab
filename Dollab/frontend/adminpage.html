@@ -86,86 +86,33 @@
   </div>
 </div>
 
-        <div class="admin-stat-card">
-          <div class="admin-stat-icon">
-            <img src="/icons/flag.svg" alt="">
-          </div>
+<div class="admin-stat-card" onclick="navigateAdminTo('reports')">
+  <div class="admin-stat-icon">
+    <img src="/icons/flag.svg" alt="">
+  </div>
 
-          <div class="admin-stat-info">
-            <span>Жалобы</span>
-            <h2>33</h2>
-          </div>
-        </div>
+  <div class="admin-stat-info">
+    <span>Жалобы</span>
+    <h2 id="adminReportsCount">0</h2>
+  </div>
+</div>
 
       </section>
 
       <!-- CENTER -->
 
-      <section class="admin-middle-layout">
+<section class="admin-middle-layout">
+  <div class="admin-chart-placeholder"></div>
 
-        <div class="admin-chart-placeholder"></div>
+  <div class="admin-reports-card">
+    <div class="admin-card-header">
+      <h3>Активные жалобы</h3>
+      <button onclick="navigateAdminTo('reports')">Смотреть все</button>
+    </div>
 
-        <div class="admin-reports-card">
-
-          <div class="admin-card-header">
-            <h3>Активные жалобы</h3>
-            <button>Смотреть все</button>
-          </div>
-
-          <div class="admin-report-item">
-
-            <div class="admin-report-left">
-              <div class="admin-report-icon">
-                <img src="/icons/users.svg" alt="">
-              </div>
-
-              <div>
-                <h4>Жалобы на пользователей</h4>
-                <p>Неприемлемое поведение</p>
-              </div>
-            </div>
-
-            <div class="admin-report-count">33</div>
-
-          </div>
-
-          <div class="admin-report-item">
-
-            <div class="admin-report-left">
-              <div class="admin-report-icon">
-                <img src="/icons/posts.svg" alt="">
-              </div>
-
-              <div>
-                <h4>Жалобы на контент</h4>
-                <p>Нарушение правил сообщества</p>
-              </div>
-            </div>
-
-            <div class="admin-report-count">33</div>
-
-          </div>
-
-          <div class="admin-report-item">
-
-            <div class="admin-report-left">
-              <div class="admin-report-icon">
-                <img src="/icons/shop.svg" alt="">
-              </div>
-
-              <div>
-                <h4>Жалобы на объявления</h4>
-                <p>Мошенничество, запрещенные товары и т.д</p>
-              </div>
-            </div>
-
-            <div class="admin-report-count">33</div>
-
-          </div>
-
-        </div>
-
-      </section>
+    <div class="admin-active-reports-list" id="adminActiveReportsList"></div>
+  </div>
+</section>
 
       <!-- REQUESTS -->
 
