@@ -263,3 +263,38 @@ async function getMyReports() {
 
   return await res.json();
 }
+
+async function createUserRequest(formData) {
+  const token = localStorage.getItem("token");
+
+  const res = await fetch(`${API_URL}/api/user-requests`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`
+    },
+    body: formData
+  });
+
+  if (!res.ok) {
+    alert(await res.text());
+    return null;
+  }
+
+  return await res.json();
+}
+
+async function getMyUserRequests() {
+  const token = localStorage.getItem("token");
+
+  const res = await fetch(`${API_URL}/api/user-requests/my`, {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
+
+  if (!res.ok) {
+    return [];
+  }
+
+  return await res.json();
+}

@@ -8,20 +8,26 @@
 
   <link rel="stylesheet" href="adminstyles.css">
   <script src="app1.js"></script>
-
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
   
   <div class="admin-page">
 
-    <!-- TOPBAR -->
 
     <header class="admin-topbar">
 
-      <div class="admin-logo">
-        <img src="/icons/dllogo_small.png" alt="">
-      </div>
+    <div
+      class="admin-logo"
+      onclick="
+        history.pushState({}, '', 'adminpage.html');
+        renderAdminDashboard();
+      "
+      title="Главная"
+    >
+      <img src="/icons/dllogo_small.png" alt="">
+    </div>
 
       <div class="admin-topbar-center">
 
@@ -33,23 +39,27 @@
           <img src="/icons/3lines.svg" alt="">
         </button>
 
-        <button class="admin-topbar-btn">
-          <img src="/icons/bell.svg" alt="">
+        <button
+          class="admin-topbar-btn"
+          onclick="navigateAdminTo('user-requests')"
+          title="Заявки пользователей"
+        >
+          <img src="/icons/note.svg" alt="">
         </button>
 
       </div>
 
-      <button class="admin-logout-btn">
+      <button
+        class="admin-topbar-btn"
+        onclick="logout()"
+      >
         <img src="/icons/logout.svg" alt="">
-        <span>Выйти</span>
       </button>
 
     </header>
 
-    <!-- CONTENT -->
 
 <main class="admin-content" id="adminContent">
-      <!-- STATS -->
 
       <section class="admin-stats-grid">
 
@@ -77,7 +87,7 @@
 
 <div class="admin-stat-card" onclick="navigateAdminTo('product-ads')">
   <div class="admin-stat-icon">
-    <img src="/icons/shop.svg" alt="">
+    <img src="/icons/shopping-bag.svg" alt="">
   </div>
 
   <div class="admin-stat-info">
@@ -99,10 +109,15 @@
 
       </section>
 
-      <!-- CENTER -->
 
 <section class="admin-middle-layout">
-  <div class="admin-chart-placeholder"></div>
+  <div class="admin-chart-card">
+  <h3>Активность по датам</h3>
+
+  <div class="admin-chart-container">
+    <canvas id="adminActivityChart"></canvas>
+  </div>
+</div>
 
   <div class="admin-reports-card">
     <div class="admin-card-header">
@@ -114,13 +129,14 @@
   </div>
 </section>
 
-      <!-- REQUESTS -->
 
       <section class="admin-requests-card">
 
         <div class="admin-card-header">
           <h3>Заявки пользователей</h3>
-          <button>Смотреть все</button>
+          <button onclick="navigateAdminTo('user-requests')">
+            Смотреть все
+          </button>
         </div>
 
         <table class="admin-table">
@@ -135,32 +151,7 @@
             </tr>
           </thead>
 
-          <tbody>
-
-            <tr>
-              <td>
-                <div class="admin-user-cell">
-                  <img src="/images/avatar.jpg" alt="">
-                  <span>zlatoslava</span>
-                </div>
-              </td>
-
-              <td>AddDoll</td>
-
-              <td>Добавь куклу пж</td>
-
-              <td>
-                01.01.2026
-                <br>
-                11:00
-              </td>
-
-              <td class="approved-status">
-                Одобрено
-              </td>
-            </tr>
-
-          </tbody>
+          <tbody id="adminUserRequestsPreviewBody"></tbody>
 
         </table>
 

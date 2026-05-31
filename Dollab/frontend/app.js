@@ -1536,6 +1536,23 @@ settingsBtn?.addEventListener("click", async () => {
     Посмотреть жалобы
   </button>
 </div>
+
+<div class="settings-card account-settings-card">
+  <div class="settings-card-header">
+    <h3>Заявки и предложения</h3>
+    <p>Отправка идей, предложений и обращений</p>
+  </div>
+
+  <button class="account-settings-btn" onclick="openUserRequestsModal()">
+    Оставить заявку
+  </button>
+
+  <button class="account-settings-btn" onclick="openMyUserRequestsModal()">
+    Мои заявки
+  </button>
+
+</div>
+
     </div>
   `;
 
@@ -4058,6 +4075,255 @@ window.sendContentReport = async function() {
 
   alert("Жалоба отправлена");
   closeReportContentModal();
+};
+
+window.openUserRequestsModal = function() {
+  let modal = document.getElementById("userRequestsModal");
+
+  if (!modal) {
+    document.body.insertAdjacentHTML("beforeend", `
+      <div class="modal hidden" id="userRequestsModal">
+        <div class="modal-overlay" onclick="closeUserRequestsModal()"></div>
+
+        <div class="modal-content user-requests-modal-content">
+          <img src="/icons/cross.svg"
+               class="modal-close-icon"
+               onclick="closeUserRequestsModal()"
+               alt="Закрыть">
+
+          <h2 class="user-requests-title">Создать заявку</h2>
+
+          <select id="userRequestType" class="edit-profile-input">
+            <option value="0">Добавление куклы</option>
+            <option value="1">Добавление категории</option>
+            <option value="2">Добавление бренда</option>
+            <option value="3">Добавление серии</option>
+            <option value="4">Добавление функционала</option>
+            <option value="5">Сообщение об ошибке</option>
+            <option value="6">Улучшение интерфейса</option>
+            <option value="7">Другое</option>
+          </select>
+
+          <textarea
+            id="userRequestDescription"
+            class="edit-profile-textarea"
+            placeholder="Опишите вашу заявку..."
+          ></textarea>
+
+          <label class="file-upload-btn" for="userRequestImages">
+            Добавить изображения
+          </label>
+
+          <input
+            type="file"
+            id="userRequestImages"
+            multiple
+            accept="image/*"
+            style="display:none;"
+          >
+
+          <button class="file-upload-btn" onclick="submitUserRequest()">
+            Отправить
+          </button>
+        </div>
+      </div>
+    `);
+
+    modal = document.getElementById("userRequestsModal");
+  }
+
+  document.getElementById("userRequestDescription").value = "";
+  document.getElementById("userRequestImages").value = "";
+
+  modal.classList.remove("hidden");
+  modal.classList.add("show");
+};
+
+window.submitUserRequest = async function() {
+  const type = Number(document.getElementById("userRequestType").value);
+
+  const description =
+    document.getElementById("userRequestDescription")
+      .value
+      .trim();
+
+  if (!description) {
+    alert("Введите описание");
+    return;
+  }
+
+  const formData = new FormData();
+
+  formData.append("type", type);
+  formData.append("description", description);
+
+  const files =
+    document.getElementById("userRequestImages").files;
+
+  for (const file of files) {
+    formData.append("images", file);
+  }
+
+  const result = await createUserRequest(formData);
+
+  if (!result) return;
+
+  alert("Заявка отправлена");
+
+  closeUserRequestsModal();
+
+  await openUserRequestsModal();
+};
+
+window.closeUserRequestsModal = function() {
+  const modal = document.getElementById("userRequestsModal");
+
+  if (!modal) return;
+
+  modal.classList.add("hidden");
+  modal.classList.remove("show");
+};
+
+function getUserRequestTypeText(type) {
+  switch (type) {
+    case 0:
+      return "Добавление куклы";
+
+    case 1:
+      return "Добавление категории";
+
+    case 2:
+      return "Добавление бренда";
+
+    case 3:
+      return "Добавление серии";
+
+    case 4:
+      return "Добавление функционала";
+
+    case 5:
+      return "Сообщение об ошибке";
+
+    case 6:
+      return "Улучшение интерфейса";
+
+    case 7:
+      return "Другое";
+
+    default:
+      return "Неизвестно";
+  }
+}
+
+function getUserRequestStatusText(status) {
+  switch (status) {
+    case 0:
+      return "На рассмотрении";
+
+    case 1:
+      return "Одобрено";
+
+    case 2:
+      return "Отклонено";
+
+    case 3:
+      return "В процессе";
+
+    case 4:
+      return "Завершено";
+
+    default:
+      return "Неизвестно";
+  }
+}
+
+window.openMyUserRequestsModal = async function() {
+  const requests = await getMyUserRequests();
+
+  let modal = document.getElementById("myUserRequestsModal");
+
+  if (!modal) {
+    document.body.insertAdjacentHTML("beforeend", `
+      <div class="modal hidden" id="myUserRequestsModal">
+        <div class="modal-overlay" onclick="closeMyUserRequestsModal()"></div>
+
+        <div class="modal-content user-requests-modal-content">
+          <img
+            src="/icons/cross.svg"
+            class="modal-close-icon"
+            onclick="closeMyUserRequestsModal()"
+            alt="Закрыть"
+          >
+
+          <h2 class="user-requests-title">
+            Мои заявки
+          </h2>
+
+          <div
+            class="user-requests-history"
+            id="myUserRequestsHistory"
+          ></div>
+
+        </div>
+      </div>
+    `);
+
+    modal = document.getElementById("myUserRequestsModal");
+  }
+
+  const history = document.getElementById("myUserRequestsHistory");
+
+  history.innerHTML = requests.length > 0
+    ? requests.map(request => `
+      <div class="user-request-item">
+
+        <div class="user-request-header">
+
+          <h4>
+            ${getUserRequestTypeText(request.type)}
+          </h4>
+
+          <span>
+            ${getUserRequestStatusText(request.status)}
+          </span>
+
+        </div>
+
+        <p class="user-request-description">
+          ${request.description}
+        </p>
+
+        ${
+          request.adminComment
+            ? `
+              <div class="user-request-admin-comment">
+                <strong>Комментарий администратора:</strong>
+
+                <p>${request.adminComment}</p>
+              </div>
+            `
+            : ""
+        }
+
+      </div>
+    `).join("")
+    : `
+      <div class="section-placeholder">
+        У вас пока нет заявок
+      </div>
+    `;
+
+  modal.classList.remove("hidden");
+  modal.classList.add("show");
+};
+
+window.closeMyUserRequestsModal = function() {
+  const modal = document.getElementById("myUserRequestsModal");
+
+  if (!modal) return;
+
+  modal.classList.add("hidden");
+  modal.classList.remove("show");
 };
 // ===== Инициализация =====
 initTheme();

@@ -1,3 +1,8 @@
+const role = localStorage.getItem("role");
+
+if (!role || role !== "Admin") {
+  window.location.href = "loginpage2.html";
+}
 const adminContent = document.getElementById("adminContent");
 
 const defaultAdminPageHTML = adminContent.innerHTML;
@@ -6,6 +11,8 @@ function renderAdminDashboard() {
   adminContent.innerHTML = defaultAdminPageHTML;
   loadAdminStats();
   loadActiveReportsBlock();
+  loadUserRequestsPreview();
+  loadActivityChart();
 
 }
 
@@ -232,6 +239,10 @@ if (hash === "product-ads") {
 }
 if (hash === "reports") {
   await renderAdminReports();
+  return;
+}
+if (hash === "user-requests") {
+  await renderAdminUserRequests();
   return;
 }
 
@@ -1238,6 +1249,405 @@ async function loadActiveReportsBlock() {
       Активных жалоб нет
     </div>
   `;
+}
+
+async function loadUserRequestsPreview() {
+  const requests = await getAdminUserRequests(0);
+  const tbody = document.getElementById("adminUserRequestsPreviewBody");
+
+  if (!tbody) return;
+
+  tbody.innerHTML = requests.length > 0
+    ? requests.slice(0, 5).map(request => `
+      <tr>
+        <td>
+          <div class="admin-user-cell">
+            <img src="${
+              request.user?.avatarUrl
+                ? `https://localhost:7145${request.user.avatarUrl}`
+                : "/icons/blank_pfp.jpg"
+            }" alt="">
+
+            <span>${request.user?.username || "Пользователь"}</span>
+          </div>
+        </td>
+
+        <td>${getUserRequestTypeText(request.type)}</td>
+
+        <td>${request.description || "—"}</td>
+
+        <td>
+          ${
+            request.createdAt
+              ? new Date(request.createdAt).toLocaleDateString("ru-RU")
+              : "—"
+          }
+        </td>
+
+        <td>
+          ${getUserRequestStatusText(request.status)}
+        </td>
+      </tr>
+    `).join("")
+    : `
+      <tr>
+        <td colspan="5" class="admin-empty-table-cell">
+          Активных заявок нет
+        </td>
+      </tr>
+    `;
+}
+
+async function renderAdminUserRequests() {
+  const requests = await getAdminUserRequests();
+  const content = document.getElementById("adminContent");
+
+  content.innerHTML = `
+    <section class="admin-users-page">
+      <div class="admin-section-header">
+        <h1>Заявки пользователей</h1>
+      </div>
+
+      <div class="admin-users-table-wrapper">
+        <table class="admin-users-table">
+          <thead>
+            <tr>
+              <th>Кто отправил</th>
+              <th>Тип</th>
+              <th>Описание</th>
+              <th>Дата</th>
+              <th>Статус</th>
+              <th>Действия</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            ${
+              requests.length > 0
+                ? requests.map(request => `
+                  <tr>
+                    <td>
+                      <div class="admin-user-mini">
+                        <img
+                          class="admin-user-avatar"
+                          src="${
+                            request.user?.avatarUrl
+                              ? `https://localhost:7145${request.user.avatarUrl}`
+                              : "/icons/blank_pfp.jpg"
+                          }"
+                        >
+                        <span>${request.user?.username || "Пользователь"}</span>
+                      </div>
+                    </td>
+
+                    <td>${getUserRequestTypeText(request.type)}</td>
+
+                    <td class="admin-post-description">
+                      ${request.description || "—"}
+                    </td>
+
+                    <td>
+                      ${
+                        request.createdAt
+                          ? new Date(request.createdAt).toLocaleDateString("ru-RU")
+                          : "—"
+                      }
+                    </td>
+
+                    <td>${getUserRequestStatusText(request.status)}</td>
+
+                    <td>
+                      <div class="admin-user-actions">
+                        <button onclick="openUpdateUserRequestModal('${request.id}', 1)">
+                          Одобрить
+                        </button>
+
+                        <button onclick="openUpdateUserRequestModal('${request.id}', 3)">
+                          В процессе
+                        </button>
+
+                        <button onclick="openUpdateUserRequestModal('${request.id}', 4)">
+                          Завершить
+                        </button>
+
+                        <button onclick="openUpdateUserRequestModal('${request.id}', 2)">
+                          Отклонить
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                `).join("")
+                : `
+                  <tr>
+                    <td colspan="6">
+                      <div class="section-placeholder">Заявок пока нет</div>
+                    </td>
+                  </tr>
+                `
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  `;
+}
+
+async function updateAdminUserRequestStatus(id, status, adminComment) {
+  const token = localStorage.getItem("token");
+
+  const res = await fetch(`${API_ADMIN_USER_REQUESTS}/${id}/status`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      status,
+      adminComment
+    })
+  });
+
+  if (!res.ok) {
+    alert(await res.text());
+    return null;
+  }
+
+  return true;
+}
+
+window.openUpdateUserRequestModal = function(requestId, status) {
+  let modal = document.getElementById("adminUserRequestStatusModal");
+
+  if (!modal) {
+    document.body.insertAdjacentHTML("beforeend", `
+      <div class="modal hidden" id="adminUserRequestStatusModal">
+        <div class="modal-overlay" onclick="closeUpdateUserRequestModal()"></div>
+
+        <div class="modal-content admin-action-modal">
+          <img src="/icons/cross.svg" class="modal-close-icon" onclick="closeUpdateUserRequestModal()" alt="Закрыть">
+
+          <h2 id="adminUserRequestStatusTitle">Изменить статус заявки</h2>
+
+          <textarea
+            class="admin-textarea"
+            id="adminUserRequestCommentInput"
+            placeholder="Комментарий администратора"
+          ></textarea>
+
+          <button class="admin-save-btn" onclick="saveUserRequestStatus()">
+            Сохранить
+          </button>
+        </div>
+      </div>
+    `);
+
+    modal = document.getElementById("adminUserRequestStatusModal");
+  }
+
+  modal.dataset.requestId = requestId;
+  modal.dataset.status = status;
+
+  document.getElementById("adminUserRequestStatusTitle").textContent =
+    `Статус: ${getUserRequestStatusText(Number(status))}`;
+
+  document.getElementById("adminUserRequestCommentInput").value = "";
+
+  modal.classList.remove("hidden");
+  modal.classList.add("show");
+};
+
+window.closeUpdateUserRequestModal = function() {
+  const modal = document.getElementById("adminUserRequestStatusModal");
+  if (!modal) return;
+
+  modal.classList.add("hidden");
+  modal.classList.remove("show");
+};
+
+window.saveUserRequestStatus = async function() {
+  const modal = document.getElementById("adminUserRequestStatusModal");
+
+  const requestId = modal.dataset.requestId;
+  const status = Number(modal.dataset.status);
+  const adminComment = document.getElementById("adminUserRequestCommentInput").value.trim();
+
+  const result = await updateAdminUserRequestStatus(requestId, status, adminComment);
+
+  if (!result) return;
+
+  closeUpdateUserRequestModal();
+  await renderAdminUserRequests();
+};
+
+function getUserRequestTypeText(type) {
+  switch (type) {
+    case 0:
+      return "Добавление куклы";
+
+    case 1:
+      return "Добавление категории";
+
+    case 2:
+      return "Добавление бренда";
+
+    case 3:
+      return "Добавление серии";
+
+    case 4:
+      return "Добавление функционала";
+
+    case 5:
+      return "Сообщение об ошибке";
+
+    case 6:
+      return "Улучшение интерфейса";
+
+    case 7:
+      return "Другое";
+
+    default:
+      return "Неизвестно";
+  }
+}
+
+function getUserRequestStatusText(status) {
+  switch (status) {
+    case 0:
+      return "На рассмотрении";
+
+    case 1:
+      return "Одобрено";
+
+    case 2:
+      return "Отклонено";
+
+    case 3:
+      return "В процессе";
+
+    case 4:
+      return "Завершено";
+
+    default:
+      return "Неизвестно";
+  }
+}
+
+function logout() {
+  if (!confirm("Выйти из аккаунта?")) return;
+
+  localStorage.removeItem("token");
+  localStorage.removeItem("userId");
+  localStorage.removeItem("username");
+  localStorage.removeItem("role");
+
+  window.location.href = "loginpage2.html"; 
+}
+
+let adminActivityChart = null;
+
+async function getActivityStatistics() {
+  const token = localStorage.getItem("token");
+
+  const res = await fetch(`${API_URL}/api/statistics/activity`, {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
+
+  if (!res.ok) {
+    console.error("Ошибка загрузки статистики:", await res.text());
+    return [];
+  }
+
+  return await res.json();
+}
+
+async function loadActivityChart() {
+  const data = await getActivityStatistics();
+  const canvas = document.getElementById("adminActivityChart");
+
+  if (!canvas) return;
+
+  if (adminActivityChart) {
+    adminActivityChart.destroy();
+  }
+
+  adminActivityChart = new Chart(canvas, {
+    type: "line",
+    data: {
+      labels: data.map(x => x.date),
+      datasets: [
+        {
+          label: "Пользователи",
+          data: data.map(x => x.users),
+          borderColor: "#FF67A6",
+          backgroundColor: "rgba(255, 103, 166, 0.12)",
+          tension: 0.35
+        },
+        {
+          label: "Посты",
+          data: data.map(x => x.posts),
+          borderColor: "#9B7DE3",
+          backgroundColor: "rgba(155, 125, 227, 0.12)",
+          tension: 0.35
+        },
+        {
+          label: "Объявления",
+          data: data.map(x => x.ads),
+          borderColor: "#FEB6E7",
+          backgroundColor: "rgba(254, 182, 231, 0.12)",
+          tension: 0.35
+        }
+      ]
+    },
+options: {
+  responsive: true,
+  maintainAspectRatio: false,
+
+  plugins: {
+    legend: {
+      labels: {
+        color: "#FF67A6",
+        font: {
+          family: "Nunito",
+          size: 13,
+          weight: "700"
+        }
+      }
+    }
+  },
+
+  scales: {
+    x: {
+      ticks: {
+        color: "#FF67A6",
+        font: {
+          family: "Nunito",
+          weight: "700"
+        }
+      },
+
+      grid: {
+        color: "rgba(255, 103, 166, 0.08)"
+      }
+    },
+
+    y: {
+      ticks: {
+        color: "#FF67A6",
+        font: {
+          family: "Nunito",
+          weight: "700"
+        }
+      },
+
+      grid: {
+        color: "rgba(255, 103, 166, 0.08)"
+      }
+    }
+  }
+}
+  });
 }
   handleAdminDeepLink();
 

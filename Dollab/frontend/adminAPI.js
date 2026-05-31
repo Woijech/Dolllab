@@ -418,3 +418,26 @@ async function rejectAdminReport(id, adminComment) {
 
   return true;
 }
+
+const API_ADMIN_USER_REQUESTS = `${API_URL}/api/admin/user-requests`;
+
+async function getAdminUserRequests(status = null) {
+  const token = localStorage.getItem("token");
+
+  const url = status === null
+    ? API_ADMIN_USER_REQUESTS
+    : `${API_ADMIN_USER_REQUESTS}?status=${status}`;
+
+  const res = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
+
+  if (!res.ok) {
+    console.error("Ошибка загрузки заявок:", await res.text());
+    return [];
+  }
+
+  return await res.json();
+}

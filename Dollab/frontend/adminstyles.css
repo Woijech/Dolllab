@@ -30,7 +30,9 @@
 /* TOPBAR */
 
 .admin-topbar {
-  height: 88px;
+  position: relative;
+
+  height: 70px;
 
   background: white;
 
@@ -40,8 +42,55 @@
 
   padding: 0 32px;
 
-  border-bottom:
-    1px solid rgba(255, 103, 166, 0.18);
+  border-bottom: 1px solid rgba(255, 103, 166, 0.18);
+
+  overflow: visible;
+  
+}
+
+.admin-topbar::after {
+  content: "";
+
+  position: absolute;
+
+  left: 0;
+  bottom: -24px;
+
+  width: 100%;
+  height: 24px;
+
+  background:
+    radial-gradient(
+      circle at center top,
+      #ffffff 12px,
+      transparent 13px
+    );
+
+  background-size: 24px 24px;
+  background-repeat: repeat-x;
+
+  pointer-events: none;
+
+  z-index: 5;
+}
+
+.admin-topbar::before {
+  content: "";
+
+  position: absolute;
+
+  left: 0;
+  right: 0;
+  bottom: -8px;
+
+  height: 12px;
+
+  pointer-events: none;
+
+  z-index: 4;
+
+  box-shadow:
+    0 6px 12px -6px rgba(255, 103, 166, 0.18);
 }
 
 .admin-logo img {
@@ -786,4 +835,49 @@
   color: #FF67A6;
   transform: translateY(-2px);
   opacity: 1;
+}
+.admin-logo {
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.admin-logo:hover {
+  transform: scale(1.05);
+}
+
+.admin-logo:active {
+  transform: scale(0.95);
+}
+
+.admin-chart-card {
+  height: 380px;
+
+  background: white;
+  border-radius: 28px;
+
+  padding: 24px;
+
+  overflow: hidden;
+
+  box-shadow:
+    0 10px 30px rgba(255, 103, 166, 0.12),
+    0 4px 12px rgba(255, 103, 166, 0.08);
+}
+
+.admin-chart-container {
+  position: relative;
+
+  width: 100%;
+  height: 300px;
+}
+
+.admin-chart-card h3 {
+  color: #FF67A6;
+  margin-bottom: 18px;
+  font-size: 24px;
+}
+
+#adminActivityChart {
+  width: 100%;
+  height: 290px;
 }

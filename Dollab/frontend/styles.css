@@ -3153,15 +3153,20 @@ body.dark-theme .modal-content {
 /* ===== SIDEBAR ===== */
 
 body.dark-theme .sidebar {
-  background: #231a33;
-  box-shadow: var(--dt-sidebar-glow);
+  background: #29213E;
+  box-shadow:
+    0 0 0 1px rgba(254, 182, 231, 0.08),
+    0 8px 24px rgba(0, 0, 0, 0.35);
+
 }
 
 body.dark-theme .sidebar::before {
   background:
-    radial-gradient(circle at left center, #231A33 12px, transparent 13px);
+    radial-gradient(circle at left center, #29213E 12px, transparent 13px);
   background-size: 24px 24px;
+  
 }
+
 
 body.dark-theme .item span,
 body.dark-theme .settings {
@@ -5154,4 +5159,120 @@ body.dark-theme .product-ad-report-icon-btn img {
     hue-rotate(286deg)
     brightness(102%)
     contrast(98%);
+}
+
+.user-requests-modal-content {
+  max-width: 700px;
+  max-height: 85vh;
+
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
+}
+
+.user-requests-title {
+  text-align: center;
+  color: #FF67A6;
+  margin-bottom: 18px;
+}
+
+.user-requests-create-block {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  margin-bottom: 24px;
+}
+
+.user-requests-history {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  overflow-y: auto;
+}
+
+.user-request-item {
+  background: #FFF8FC;
+
+  border-radius: 18px;
+
+  padding: 16px;
+}
+
+.user-request-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  margin-bottom: 10px;
+}
+
+.user-request-header h4,
+.user-request-header span {
+  color: #FF67A6;
+  font-weight: 800;
+}
+
+.user-request-description {
+  color: #555;
+  line-height: 1.5;
+}
+
+.user-request-admin-comment {
+  margin-top: 14px;
+
+  background: rgba(255, 103, 166, 0.08);
+
+  border-radius: 14px;
+
+  padding: 12px;
+}
+
+.user-request-admin-comment strong {
+  color: #FF67A6;
+}
+
+body.dark-theme .user-request-item {
+  background: #271F38;
+}
+
+body.dark-theme .user-requests-title,
+body.dark-theme .user-request-header h4,
+body.dark-theme .user-request-header span,
+body.dark-theme .user-request-admin-comment strong {
+  color: #FEB6E7;
+}
+
+body.dark-theme .user-request-description {
+  color: #DDD6F7;
+}
+
+body.dark-theme .user-request-admin-comment {
+  background: rgba(153, 130, 210, 0.12);
+}
+
+.user-requests-actions {
+  display: flex;
+  justify-content: center;
+
+  margin-top: 10px;
+}
+
+.secondary-user-request-btn {
+  background: transparent !important;
+
+  border: 2px solid #FF67A6 !important;
+
+  color: #FF67A6 !important;
+}
+
+.secondary-user-request-btn:hover {
+  background: rgba(255, 103, 166, 0.08) !important;
+}
+
+body.dark-theme .secondary-user-request-btn {
+  border-color: #FEB6E7 !important;
+  color: #FEB6E7 !important;
 }
