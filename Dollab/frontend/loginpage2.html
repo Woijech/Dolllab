@@ -303,7 +303,6 @@ body.register-mode .bg-inverted {
         }
         
         
-        /* Стили для кнопок */
         .btn {
             width: 100%;
             max-width: 330px;
@@ -319,49 +318,56 @@ body.register-mode .bg-inverted {
             letter-spacing: -1px;
         }
         
-        /* Кнопка "Войти" и "Зарегистрироваться" */
         .btn-login, .btn-register {
-            background-color: #ff67a6;
+            background-color: #f733857c;
             color: #ffffff;
             border: none;
             margin-bottom: 15px;
             margin-top: 10px;
             font-size: 30px;
+            box-shadow:
+                0 0 18px rgba(255, 255, 255, 0.35)
+
+            backdrop-filter: blur(6px);
         }
         
         .btn-login:hover, .btn-register:hover {
-            background-color: #f73385;
+            background-color: #f733856c;
             transform: translateY(-2px);
+            box-shadow:
+                0 0 14px rgba(255, 255, 255, 0.65),
+                0 0 24px rgba(255, 147, 244, 0.35);
         }
         
         .btn-login:active, .btn-register:active {
             transform: translateY(0);
         }
         
-        /* Кнопка "Создать новый аккаунт" и "Вернуться ко входу" */
         .btn-signup, .btn-back {
             background-color: transparent;
             color: #ff67a6;
             font-size: 25px;
-            border: 2px solid #ff67a6;
+            background-color: #ffd1fc52;
+            border: 1.5px solid #ffffff;
         }
         
         .btn-signup:hover, .btn-back:hover {
-            background-color: #f7338524;
             transform: translateY(-2px);
+            box-shadow:
+                0 0 14px rgba(255, 255, 255, 0.65),
+                0 0 24px rgba(255, 147, 244, 0.35);
         }
         
         .btn-signup:active, .btn-back:active {
             transform: translateY(0);
         }
         
-        /* Фокус для доступности */
-.btn:focus,
-.form-input:focus {
-    outline: none;
-    box-shadow: 0 0 14px rgba(255, 103, 166, 0.65);
-    transform: scale(1.03);
-}
+        .btn:focus,
+        .form-input:focus {
+            outline: none;
+            box-shadow: 0 0 14px rgba(255, 103, 166, 0.65);
+            transform: scale(1.03);
+        }
         
         /* Адаптивность для мобильных устройств */
         @media (max-width: 768px) {
