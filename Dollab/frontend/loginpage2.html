@@ -5,16 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Вход | dollab</title>
     
-    <!-- Подключаем шрифт Montserrat с Google Fonts -->
+     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900;1000&display=swap" rel="stylesheet">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Lobster&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lobster&display=swap" rel="stylesheet">
 
   <script src="app1.js"></script>
     <style>
@@ -37,24 +37,117 @@
             overflow: hidden;
         }
         
-        /* Градиентный фон - слой 1 (исходный) */
-        .bg-gradient {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle, #ffd1e9 0%, #ffffff 90%);
-            z-index: -1;
-            opacity: 1;
-            transition: opacity 0.5s ease;
-        }
-        
-        /* Градиентный фон - слой 2 (инвертированный) */
-        .bg-gradient.inverted {
-            background: radial-gradient(circle, #ffffff 0%, #ffd1e9 90%);
-            opacity: 0;
-        }
+.background {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.bg-gradient {
+    position: absolute;
+    inset: 0;
+    transition: opacity 0.5s ease;
+}
+
+.bg-normal {
+    background:
+        radial-gradient(circle at 50% 58%,
+            #ff75b8 0%,
+            #ff8fc8 26%,
+            #ffb2d8 50%,
+            #f7d9f1 72%,
+            #fff3fa 100%
+        );
+    opacity: 1;
+}
+
+.bg-inverted {
+    background:
+        radial-gradient(circle at 48% 42%,
+            #fff3fa 0%,
+            #f8d6ef 24%,
+            #ffadd5 50%,
+            #ff8ac3 74%,
+            #ff6fb2 100%
+        );
+    opacity: 0;
+}
+.background::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+
+    background:
+        radial-gradient(circle at 50% 82%,
+            rgba(255, 107, 178, 0.32) 0%,
+            rgba(255, 150, 205, 0.22) 32%,
+            transparent 62%
+        ),
+        radial-gradient(circle at 82% 22%,
+            rgba(255, 255, 255, 0.45) 0%,
+            transparent 24%
+        ),
+        radial-gradient(circle at 18% 20%,
+            rgba(255, 180, 220, 0.28) 0%,
+            transparent 34%
+        );
+
+    filter: blur(16px);
+    opacity: 0.85;
+}
+.background::before {
+    content: "";
+    position: absolute;
+    inset: -15%;
+    z-index: 2;
+
+    background:
+        radial-gradient(ellipse at 30% 25%,
+            rgba(255, 255, 255, 0.55) 0%,
+            rgba(255, 255, 255, 0.24) 12%,
+            transparent 32%
+        ),
+        radial-gradient(ellipse at 70% 35%,
+            rgba(255, 255, 255, 0.42) 0%,
+            rgba(255, 255, 255, 0.2) 10%,
+            transparent 28%
+        ),
+        radial-gradient(ellipse at 58% 78%,
+            rgba(255, 255, 255, 0.3) 0%,
+            rgba(255, 198, 232, 0.18) 18%,
+            transparent 42%
+        );
+
+    filter: blur(20px);
+    opacity: 0.75;
+}
+
+body.register-mode .bg-normal {
+    opacity: 0;
+}
+
+body.register-mode .bg-inverted {
+    opacity: 1;
+}
+
+.sparkle-video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+
+    z-index: 4;
+    opacity: 0.85;
+
+    mix-blend-mode: screen;
+    filter: brightness(1.45) contrast(1.2) saturate(1.05);
+
+    pointer-events: none;
+}
         
         /* Когда активен инвертированный фон */
         body.register-mode .bg-gradient:first-child {
@@ -74,18 +167,6 @@
             flex-direction: column;
             align-items: center;
             position: relative;
-        }
-        
-        /* Заголовок */
-        .login-header h1 {
-            font-family: Buntera Demo;
-            color: #ff67a6;
-            font-size: 130px;
-            font-weight: 10;
-            margin-bottom: 20px;
-            margin-top: 40px;
-            letter-spacing: 0px;
-            transition: opacity 0.4s ease, transform 0.4s ease;
         }
         
         /* Формы */
@@ -143,9 +224,10 @@
             height: 55px;
             padding: 0 30px;
             border-radius: 30px;
-            border: 1px solid #ff67a6;
-            font-family: "Lobster";
+            border: 1px #ff67a6;
+            font-family: "Nunito";
             font-size: 25px;
+            font-weight: 700;
             color: #ff8abb;
             transition: all 0.3s ease;
             margin-top: 20px;
@@ -220,44 +302,21 @@
             color: #ffbcd8;
         }
         
-        /* Ссылка "Забыли пароль?" */
-        .forgot-password {
-            display: inline-block;
-            margin-top: 10px;
-            margin-bottom: 20px;
-            color: #ff67a6;
-            font-family: "Lobster";
-            font-size: 18px;
-            text-decoration: none;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            max-width: 450px;
-            width: 100%;
-            text-align: center;
-            padding-right: 15px;
-        }
-        
-        .forgot-password:hover {
-            color: #f73385;
-            transform: translateY(-1px);
-        }
-        
-        .forgot-password:active {
-            transform: translateY(0);
-        }
         
         /* Стили для кнопок */
         .btn {
             width: 100%;
-            max-width: 300px;
+            max-width: 330px;
             height: 55px;
             border-radius: 30px;
-            font-family: "Lobster";
-            font-weight: 1;
+            font-family: "Nunito";
+            font-weight: 700;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s ease;
             display: block;
+            padding: 5px;
+            letter-spacing: -1px;
         }
         
         /* Кнопка "Войти" и "Зарегистрироваться" */
@@ -297,11 +356,12 @@
         }
         
         /* Фокус для доступности */
-        .btn:focus,
-        .form-input:focus {
-            outline: 2px solid #ff67a6;
-            outline-offset: 2px;
-        }
+.btn:focus,
+.form-input:focus {
+    outline: none;
+    box-shadow: 0 0 14px rgba(255, 103, 166, 0.65);
+    transform: scale(1.03);
+}
         
         /* Адаптивность для мобильных устройств */
         @media (max-width: 768px) {
@@ -399,18 +459,49 @@
         .login-form, .register-form {
             animation: fadeIn 0.5s ease-out;
         }
+
+        .app-logo {
+    width: 500px;
+    max-width: 80vw;
+    height: auto;
+    margin-right: 60px;
+    margin-top: 10px;
+
+    display: block;
+
+    transition: opacity 0.4s ease, transform 0.4s ease;
+
+    filter: drop-shadow(0 8px 18px rgba(255, 103, 166, 0.25));
+}
+.input-spacer {
+    width: 450px;
+    height: 55px;
+    margin-top: 38px;
+    visibility: hidden;
+    pointer-events: none;
+}
     </style>
 </head>
 <body>
-    <!-- Два слоя градиентного фона для плавного перехода -->
-    <div class="bg-gradient"></div>
-    <div class="bg-gradient inverted"></div>
+<div class="background">
+    <div class="bg-gradient bg-normal"></div>
+    <div class="bg-gradient bg-inverted"></div>
+
+    <video class="sparkle-video" autoplay muted loop playsinline>
+        <source src="icons/glitter.webm" type="video/webm">
+    </video>
+</div>
+
     
     <div class="login-container">
-        <!-- Заголовок страницы -->
-        <header class="login-header">
-            <h1 id="mainTitle">Welcome to Dollab</h1>
-        </header>
+<header class="login-header">
+    <img 
+        src="icons/dllogonew.png" 
+        alt="Dollab" 
+        id="mainTitle" 
+        class="app-logo"
+    >
+</header>
         
         <!-- Основная форма входа -->
         <main style="position: relative; width: 100%; height: 500px;">
@@ -447,7 +538,8 @@
                             </svg>
                         </span>
                     </div>
-                    
+                    <div class="form-input input-spacer" aria-hidden="true"></div>
+
                 </div>
                 
                 <!-- Кнопка входа -->
@@ -569,7 +661,7 @@
             
             // После небольшой паузы показываем форму регистрации
             setTimeout(() => {
-                mainTitle.textContent = 'Welcome to Dollab';
+                mainTitle.textContent = 'Добро пожаловать в DollLab';
                 mainTitle.style.opacity = '1';
                 mainTitle.style.transform = 'translateY(0)';
                 
@@ -597,7 +689,7 @@
             
             // После небольшой паузы показываем форму входа
             setTimeout(() => {
-                mainTitle.textContent = 'Welcome to Dollab';
+                mainTitle.textContent = 'Добро пожаловать DollLab';
                 mainTitle.style.opacity = '1';
                 mainTitle.style.transform = 'translateY(0)';
                 
