@@ -28,8 +28,81 @@ const userSearchWrapper = document.querySelector(".user-search-wrapper");
 const userSearchInput = document.getElementById("userSearchInput");
 const userClearIcon = document.getElementById("userClearIcon");
 
+function updateURLForSection(sectionId, extraParams = {}) {
+  const params = new URLSearchParams();
 
-// ===== Модальное окно просмотра поста =====
+  if (sectionId !== "home") {
+    params.set("section", sectionId);
+  }
+
+  if (sectionId === "profile" && currentProfileTab !== "posts") {
+    params.set("tab", currentProfileTab);
+  }
+
+  if (extraParams.userId) {
+    params.set("user", extraParams.userId);
+  }
+
+  if (sectionId === "cart") {
+    if (shopFilters.categoryId) params.set("category", shopFilters.categoryId);
+    if (shopFilters.priceFrom) params.set("priceFrom", shopFilters.priceFrom);
+    if (shopFilters.priceTo) params.set("priceTo", shopFilters.priceTo);
+    if (shopFilters.search) params.set("search", shopFilters.search);
+  }
+
+  if (sectionId === "cyclopedia" && searchInput?.value) {
+    params.set("dollSearch", searchInput.value);
+  }
+
+  if (sectionId === "interesting" && userSearchInput?.value) {
+    params.set("userSearch", userSearchInput.value);
+  }
+
+  const queryString = params.toString();
+  const baseURL = window.location.pathname;
+  const newURL = queryString ? `${baseURL}?${queryString}` : baseURL;
+
+  const currentURL = window.location.pathname + window.location.search;
+
+  if (newURL === currentURL) {
+    return;
+  }
+
+  const state = { section: sectionId, ...extraParams };
+
+  window.history.pushState(state, "", newURL);
+
+  console.log("URL обновлен:", window.location.href);
+}
+
+let isPushState = false;
+
+window.addEventListener('pushstate', () => {
+  isPushState = true;
+  setTimeout(() => {
+    isPushState = false;
+  }, 100);
+});
+
+
+
+function parseURLState() {
+  const params = new URLSearchParams(window.location.search);
+  
+  return {
+    section: params.get("section") || "home",
+    tab: params.get("tab") || "posts",
+    userId: params.get("user"),
+    category: params.get("category"),
+    priceFrom: params.get("priceFrom"),
+    priceTo: params.get("priceTo"),
+    search: params.get("search"),
+    dollSearch: params.get("dollSearch"),
+    userSearch: params.get("userSearch")
+  };
+}
+
+
 function createPostViewModal() {
   if (!document.getElementById('postViewModal')) {
     const modalHTML = `
@@ -58,29 +131,29 @@ function createPostViewModal() {
             </div>
 
 
-<div class="post-modal-add-comment">
-  <input type="text" id="postModalCommentInput" placeholder="Добавить комментарий...">
-<button id="postModalCommentSend">
-  <img src="/icons/plane.svg" alt="Отправить">
-</button>
-</div>
-            
-            <div class="post-modal-actions">
-              <div class="post-modal-actions-row">
-                <div class="post-modal-actions-left">
-<span class="action-icon" title="Нравится" id="postModalLikeBtn">
-  <img src="/icons/heart.svg" alt="Лайк" style="width: 22px; height: 22px;">
-</span>
-<span class="action-icon" title="Избранное" id="postModalFavoriteBtn">
-  <img src="/icons/bookmark.svg" alt="Избранное" style="width: 22px; height: 22px;">
-</span>
-      <span
-        class="action-icon"
-        title="Пожаловаться"
-        onclick="openReportContentModal('post', currentPostId)"
-      >
-        <img src="/icons/flag.svg" alt="Жалоба" style="width: 21px; height: 21px;">
-      </span>
+              <div class="post-modal-add-comment">
+                <input type="text" id="postModalCommentInput" placeholder="Добавить комментарий...">
+                <button id="postModalCommentSend">
+                  <img src="/icons/plane.svg" alt="Отправить">
+                </button>
+              </div>
+                          
+                          <div class="post-modal-actions">
+                            <div class="post-modal-actions-row">
+                              <div class="post-modal-actions-left">
+              <span class="action-icon" title="Нравится" id="postModalLikeBtn">
+                <img src="/icons/heart.svg" alt="Лайк" style="width: 22px; height: 22px;">
+              </span>
+              <span class="action-icon" title="Избранное" id="postModalFavoriteBtn">
+                <img src="/icons/bookmark.svg" alt="Избранное" style="width: 22px; height: 22px;">
+              </span>
+                    <span
+                      class="action-icon"
+                      title="Пожаловаться"
+                      onclick="openReportContentModal('post', currentPostId)"
+                    >
+                      <img src="/icons/flag.svg" alt="Жалоба" style="width: 21px; height: 21px;">
+                    </span>
 
                 </div>
               </div>
@@ -889,7 +962,7 @@ document.body.insertAdjacentHTML("beforeend", editModalHTML);
   </div>
 `).join('');
     } else {
-      profileGrid.innerHTML = `<div class="section-placeholder" style="grid-column:1/-1;">✨ Нет публикаций ✨</div>`;
+      profileGrid.innerHTML = `<div class="section-placeholder" style="grid-column:1/-1;">Нет публикаций</div>`;
     }
 } else if (currentProfileTab === 'shop') {
   const ads = await getMyProductAds(token);
@@ -1066,13 +1139,19 @@ ${
     setupEditProfileModal();
   }, 0);
 
-  document.querySelectorAll('.profile-tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-      const tabName = tab.getAttribute('data-tab');
-      currentProfileTab = tabName;
-      renderProfile();
+  setTimeout(() => {
+    document.querySelectorAll('.profile-tab').forEach(tab => {
+      const newTab = tab.cloneNode(true);
+      tab.parentNode.replaceChild(newTab, tab);
+      
+      newTab.addEventListener('click', () => {
+        const tabName = newTab.getAttribute('data-tab');
+        currentProfileTab = tabName;
+        updateURLForSection("profile");
+        renderProfile();
+      });
     });
-  });
+  }, 0);
 }
 
 window.toggleLike = async function(event, postId) {
@@ -1183,12 +1262,22 @@ const editContactMethod = document.getElementById("editProfileContactMethod");
 window.openPostModal = openPostModal;
 
 // ===== Переключение разделов =====
-function switchToSection(sectionId) {
+function switchToSection(sectionId, updateURL = true) {
+  console.log("switchToSection вызвана:", sectionId, "updateURL:", updateURL);
   if (currentSection !== "profile" && currentSection !== "add") {
     previousSection = currentSection;
   }
 
   currentSection = sectionId;
+
+  if (!updateURL) {
+    const urlState = parseURLState();
+    if (urlState.tab) currentProfileTab = urlState.tab;
+    if (urlState.category) shopFilters.categoryId = urlState.category;
+    if (urlState.priceFrom) shopFilters.priceFrom = urlState.priceFrom;
+    if (urlState.priceTo) shopFilters.priceTo = urlState.priceTo;
+    if (urlState.search) shopFilters.search = urlState.search;
+  }
 
   menuItems.forEach(item => {
     const sec = item.getAttribute("data-section");
@@ -1202,18 +1291,13 @@ function switchToSection(sectionId) {
   const topbarCartIcon = document.getElementById("topbarCartIcon");
   const shopCategoriesRoof = document.getElementById("shopCategoriesRoof");
 
-  if (shopCategoriesRoof) {
-  shopCategoriesRoof.style.display = "none";
-}
+  if (shopCategoriesRoof) shopCategoriesRoof.style.display = "none";
   if (topbarLeft) topbarLeft.innerHTML = "";
 
-  // общий сброс для всех вкладок
   if (searchWrapper) {
     searchWrapper.style.display = "none";
     searchWrapper.classList.remove("shop-topbar-search");
-    if (searchInput) {
-  searchInput.oninput = null;
-}
+    if (searchInput) searchInput.oninput = null;
   }
 
   if (searchInput) {
@@ -1226,12 +1310,17 @@ function switchToSection(sectionId) {
   if (topbarCartIcon) topbarCartIcon.style.display = "none";
   if (shopCategoriesRoof) shopCategoriesRoof.style.display = "none";
 
+  // Обновляем URL всегда, когда происходит прямое переключение
+  if (updateURL) {
+    console.log("Обновляем URL для секции:", sectionId); // Для отладки
+    updateURLForSection(sectionId);
+  }
+
   if (sectionId === "home") {
     if (profileAvatar) {
       profileAvatar.style.display = "block";
       loadUserAvatar();
     }
-
     renderHomeFeed();
 
   } else if (sectionId === "cyclopedia") {
@@ -1247,17 +1336,22 @@ function switchToSection(sectionId) {
       contentArea.innerHTML = `<div class="dolls-grid" id="dollsGrid"></div>`;
     }
 
+    const urlState = parseURLState();
+    if (urlState.dollSearch && searchInput) {
+      searchInput.value = urlState.dollSearch;
+    }
+
     loadDolls({
       search: searchInput?.value.trim() || "",
       brand: brandFilter?.value || "",
       releaseYear: yearFilter?.value || ""
     });
 
-  } else if (sectionId === "profile") {
-    if (profileAvatar) profileAvatar.style.display = "none";
+} else if (sectionId === "profile") {
+  if (profileAvatar) profileAvatar.style.display = "none";
+  menuItems.forEach(item => item.classList.remove("active"));
 
-    menuItems.forEach(item => item.classList.remove("active"));
-    renderProfile();
+  renderProfile();
 
   } else if (sectionId === "interesting") {
     if (profileAvatar) {
@@ -1266,9 +1360,15 @@ function switchToSection(sectionId) {
     }
 
     if (userSearchWrapper) userSearchWrapper.style.display = "block";
-    if (userSearchInput) userSearchInput.value = "";
-
-    renderInterestingPosts();
+    
+    const urlState = parseURLState();
+    if (urlState.userSearch && userSearchInput) {
+      userSearchInput.value = urlState.userSearch;
+      renderUserSearchResults(urlState.userSearch);
+    } else {
+      if (userSearchInput) userSearchInput.value = "";
+      renderInterestingPosts();
+    }
 
   } else if (sectionId === "cart") {
     if (profileAvatar) {
@@ -1282,12 +1382,14 @@ function switchToSection(sectionId) {
     }
 
     if (searchInput) {
-      searchInput.value = "";
+      const urlState = parseURLState();
+      searchInput.value = shopFilters.search || urlState.search || "";
       searchInput.placeholder = "Поиск товаров";
       searchInput.oninput = async () => {
-  shopFilters.search = searchInput.value;
-  await renderShopPage();
-};
+        shopFilters.search = searchInput.value;
+        updateURLForSection("cart");
+        await renderShopPage();
+      };
     }
 
     if (topbarCartIcon) topbarCartIcon.style.display = "block";
@@ -1296,19 +1398,17 @@ function switchToSection(sectionId) {
     renderShopPage();
     loadShopCategoriesDropdown();
 
-    } else if (sectionId === "notifications") {
-  if (profileAvatar) {
-    profileAvatar.style.display = "block";
-    loadUserAvatar();
-  }
-
-  renderNotificationsPage();
+  } else if (sectionId === "notifications") {
+    if (profileAvatar) {
+      profileAvatar.style.display = "block";
+      loadUserAvatar();
+    }
+    renderNotificationsPage();
   } else {
     if (profileAvatar) {
       profileAvatar.style.display = "block";
       loadUserAvatar();
     }
-
     contentArea.innerHTML = `
       <div class="section-placeholder">
         Раздел в разработке<br>
@@ -1778,27 +1878,24 @@ window.openUserProfile = async function(userId) {
     return;
   }
 
+  // Обновляем URL с параметром пользователя
+  updateURLForSection("user-profile", { userId: userId });
+
   if (userSearchWrapper) userSearchWrapper.style.display = "none";
 
   const user = await getUserProfile(userId);
 
-if (user.isBlocked) {
-  contentArea.innerHTML = `
-    <div class="profile blocked-profile">
-      <div class="blocked-profile-content">
-
-        <h1>${user.username || "Пользователь"}</h1>
-
-        <p>
-          ${user.message || "Этот пользователь вас заблокировал"}
-        </p>
-
+  if (user.isBlocked) {
+    contentArea.innerHTML = `
+      <div class="profile blocked-profile">
+        <div class="blocked-profile-content">
+          <h1>${user.username || "Пользователь"}</h1>
+          <p>${user.message || "Этот пользователь вас заблокировал"}</p>
+        </div>
       </div>
-    </div>
-  `;
-
-  return;
-}
+    `;
+    return;
+  }
 
   if (!user) {
     contentArea.innerHTML = `
@@ -1819,6 +1916,9 @@ if (user.isBlocked) {
         ? "Запросить подписку"
         : "Подписаться";
 
+  // Скрываем меню и показываем кнопку "назад"
+  menuItems.forEach(item => item.classList.remove("active"));
+  
   contentArea.innerHTML = `
     <div class="profile">
       <div class="profile-header">
@@ -1827,25 +1927,24 @@ if (user.isBlocked) {
         </div>
 
         <div class="profile-info">
-<div class="profile-info-header other-profile-header">
-  <h1>${user.username}</h1>
+          <div class="profile-info-header other-profile-header">
+            <h1>${user.username}</h1>
 
-  <div class="other-profile-menu">
-    <button class="other-profile-menu-btn" onclick="event.stopPropagation(); toggleOtherProfileMenu()">
-      <img src="/icons/ellipsis.svg" alt="Меню">
-    </button>
+            <div class="other-profile-menu">
+              <button class="other-profile-menu-btn" onclick="event.stopPropagation(); toggleOtherProfileMenu()">
+                <img src="/icons/ellipsis.svg" alt="Меню">
+              </button>
 
-    <div class="other-profile-dropdown" id="otherProfileDropdown">
-      <button onclick="event.stopPropagation(); openReportUserModal('${userId}')">
-        Пожаловаться
-      </button>
-
-      <button onclick="event.stopPropagation(); blockUserFromProfile('${userId}')">
-        Заблокировать пользователя
-      </button>
-    </div>
-  </div>
-</div>
+              <div class="other-profile-dropdown" id="otherProfileDropdown">
+                <button onclick="event.stopPropagation(); openReportUserModal('${userId}')">
+                  Пожаловаться
+                </button>
+                <button onclick="event.stopPropagation(); blockUserFromProfile('${userId}')">
+                  Заблокировать пользователя
+                </button>
+              </div>
+            </div>
+          </div>
 
           <div class="profile-stats">
             <div class="stat-item">
@@ -1877,38 +1976,30 @@ if (user.isBlocked) {
           <img src="/icons/grid.svg">
         </div>
 
-${
-  user.showStoreInProfile
-    ? `
-      <div class="profile-tab" onclick="showOtherUserTab('shop', event)">
-        <img src="/icons/shop.svg">
-      </div>
-    `
-    : ""
-}
+        ${user.showStoreInProfile ? `
+          <div class="profile-tab" onclick="showOtherUserTab('shop', event)">
+            <img src="/icons/shop.svg">
+          </div>
+        ` : ""}
       </div>
 
       <div class="profile-grid" id="otherUserProfileGrid" data-user-id="${userId}">
-        ${
-          user.isPrivate
-            ? `
-              <div class="section-placeholder" style="grid-column:1/-1;">
-                🔒 Профиль закрыт<br>
-                Подпишитесь, чтобы видеть публикации
+        ${user.isPrivate ? `
+          <div class="section-placeholder" style="grid-column:1/-1;">
+            🔒 Профиль закрыт<br>
+            Подпишитесь, чтобы видеть публикации
+          </div>
+        ` : (user.posts || []).map(post => `
+          <div class="profile-grid-item">
+            <img src="${post.imageUrl ? `https://localhost:7145${post.imageUrl}` : ''}">
+            <div class="profile-grid-item-overlay" onclick="openPostModal('${post.id}')">
+              <div class="post-card-likes" onclick="toggleLike(event, '${post.id}')">
+                <img src="${post.isLiked ? '/icons/heart-filled.svg' : '/icons/heart.svg'}">
+                <span>${post.likesCount ?? 0}</span>
               </div>
-            `
-            : (user.posts || []).map(post => `
-              <div class="profile-grid-item">
-                <img src="${post.imageUrl ? `https://localhost:7145${post.imageUrl}` : ''}">
-                <div class="profile-grid-item-overlay" onclick="openPostModal('${post.id}')">
-                  <div class="post-card-likes" onclick="toggleLike(event, '${post.id}')">
-                    <img src="${post.isLiked ? '/icons/heart-filled.svg' : '/icons/heart.svg'}">
-                    <span>${post.likesCount ?? 0}</span>
-                  </div>
-                </div>
-              </div>
-            `).join('')
-        }
+            </div>
+          </div>
+        `).join('')}
       </div>
     </div>
   `;
@@ -4704,10 +4795,159 @@ function setupCommentReplyClicks() {
     };
   });
 }
-// ===== Инициализация =====
+
+window.addEventListener("popstate", (event) => {
+  console.log("Popstate event:", event.state);
+
+  const urlState = parseURLState();
+
+  if (urlState.userId) {
+    openUserProfile(urlState.userId, false);
+  } else {
+    switchToSection(urlState.section, false);
+  }
+});
+
+// Преобразуем каждый фильтр в кастомный дропдаун
+document.querySelectorAll('.filter-dropdown').forEach(dropdown => {
+  const originalSelect = dropdown.querySelector('.filter-select');
+  const originalArrow = dropdown.querySelector('.dropdown-arrow');
+  
+  // Скрываем оригинальную стрелку (но не удаляем)
+  if (originalArrow) {
+    originalArrow.style.display = 'none';
+  }
+  
+  // Создаём кастомный триггер
+  const trigger = document.createElement('div');
+  trigger.className = 'custom-select-trigger';
+  
+  // Получаем текст выбранной опции
+  const getSelectedText = () => {
+    const selectedOption = originalSelect.options[originalSelect.selectedIndex];
+    return selectedOption ? selectedOption.textContent : 'Выберите';
+  };
+  
+  const selectedTextSpan = document.createElement('span');
+  selectedTextSpan.textContent = getSelectedText();
+  
+  // Создаём НОВУЮ стрелку
+  const newArrow = document.createElement('div');
+  newArrow.className = 'dropdown-arrow';
+  newArrow.innerHTML = '▼';
+  newArrow.style.display = 'block';
+  
+  trigger.appendChild(selectedTextSpan);
+  trigger.appendChild(newArrow);
+  
+  // Вставляем триггер перед select
+  dropdown.insertBefore(trigger, originalSelect);
+  
+  // Создаём выпадающий список
+  const dropdownList = document.createElement('div');
+  dropdownList.className = 'custom-dropdown-list';
+  
+  // Заполняем опциями из select
+  const updateDropdownList = () => {
+    dropdownList.innerHTML = '';
+    Array.from(originalSelect.options).forEach((option, index) => {
+      const optionDiv = document.createElement('div');
+      optionDiv.className = 'custom-dropdown-option';
+      if (option.selected) optionDiv.classList.add('active');
+      optionDiv.textContent = option.textContent;
+      optionDiv.dataset.value = option.value;
+      optionDiv.dataset.index = index;
+      
+      optionDiv.addEventListener('click', (e) => {
+        e.stopPropagation();
+        
+        // Обновляем select
+        originalSelect.selectedIndex = index;
+        
+        // Обновляем отображаемый текст
+        selectedTextSpan.textContent = option.textContent;
+        
+        // Триггерим событие change
+        originalSelect.dispatchEvent(new Event('change'));
+        
+        // Обновляем активные классы
+        dropdownList.querySelectorAll('.custom-dropdown-option').forEach(opt => {
+          opt.classList.remove('active');
+        });
+        optionDiv.classList.add('active');
+        
+        // Закрываем дропдаун
+        dropdown.classList.remove('open');
+      });
+      
+      dropdownList.appendChild(optionDiv);
+    });
+  };
+  
+  updateDropdownList();
+  dropdown.appendChild(dropdownList);
+  
+  // Открытие/закрытие по клику на триггер
+  trigger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    
+    // Закрываем другие дропдауны
+    document.querySelectorAll('.filter-dropdown.open').forEach(d => {
+      if (d !== dropdown) d.classList.remove('open');
+    });
+    
+    dropdown.classList.toggle('open');
+    
+    // Анимируем новую стрелку
+    if (dropdown.classList.contains('open')) {
+      newArrow.style.transform = 'rotate(180deg)';
+    } else {
+      newArrow.style.transform = 'rotate(0deg)';
+    }
+  });
+  
+  // Синхронизация при изменении select
+  originalSelect.addEventListener('change', () => {
+    selectedTextSpan.textContent = getSelectedText();
+    updateDropdownList();
+  });
+  
+  // Синхронизация при динамической загрузке опций
+  const observer = new MutationObserver(() => {
+    updateDropdownList();
+    selectedTextSpan.textContent = getSelectedText();
+  });
+  
+  observer.observe(originalSelect, { childList: true, subtree: true });
+});
+
+// Закрытие при клике вне дропдауна
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.filter-dropdown')) {
+    document.querySelectorAll('.filter-dropdown.open').forEach(dropdown => {
+      dropdown.classList.remove('open');
+      // Возвращаем стрелку в исходное положение
+      const arrow = dropdown.querySelector('.custom-select-trigger .dropdown-arrow');
+      if (arrow) arrow.style.transform = 'rotate(0deg)';
+    });
+  }
+});
+
 initTheme();
 updateNotificationsBadge();
 createPostViewModal();
 createEditPostModal();
 loadUserAvatar();
-switchToSection("home");
+
+const initialState = parseURLState();
+currentProfileTab = initialState.tab || "posts";
+if (initialState.category) shopFilters.categoryId = initialState.category;
+if (initialState.priceFrom) shopFilters.priceFrom = initialState.priceFrom;
+if (initialState.priceTo) shopFilters.priceTo = initialState.priceTo;
+if (initialState.search) shopFilters.search = initialState.search;
+
+if (initialState.userId) {
+  openUserProfile(initialState.userId);
+} else {
+  switchToSection(initialState.section, false);
+}

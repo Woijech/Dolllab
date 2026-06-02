@@ -314,9 +314,21 @@ body,
   margin: 20px 0 30px;
   flex-wrap: wrap;
 }
-.filter-dropdown { position: relative; display: inline-block; }
+.filter-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+/* Скрываем стандартный select, но оставляем его в DOM для функционала */
 .filter-select {
-  appearance: none;
+  position: absolute;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* Кастомный триггер */
+.custom-select-trigger {
   background: #ffffff;
   border: 0px solid rgba(255, 103, 166, 0.3);
   box-shadow: 0 0 7px rgba(255, 103, 166, 0.15);
@@ -327,17 +339,140 @@ body,
   color: #FF67A6;
   cursor: pointer;
   transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  white-space: nowrap;
+  min-width: 120px;
 }
-.filter-select:hover { background: white; transform: translateY(-1px); }
+
+.custom-select-trigger:hover {
+  background: white;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 12px rgba(255, 103, 166, 0.2);
+}
+
+.custom-select-trigger:active {
+  transform: translateY(1px);
+}
+
+/* Стрелка */
 .dropdown-arrow {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  pointer-events: none;
+  position: relative;
+  right: auto;
+  top: auto;
+  transform: none;
   color: #FF67A6;
   font-size: 12px;
+  transition: transform 0.3s ease;
+  pointer-events: none;
 }
+
+.filter-dropdown.open .dropdown-arrow {
+  transform: rotate(180deg);
+}
+
+/* Выпадающий список */
+.custom-dropdown-list {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  min-width: 100%;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(255, 103, 166, 0.15);
+  padding: 8px 0;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 100;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.filter-dropdown.open .custom-dropdown-list {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+/* Опции */
+.custom-dropdown-option {
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: #FF67A6;
+  transition: all 0.2s ease;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.custom-dropdown-option:hover {
+  background: linear-gradient(90deg, rgba(255, 103, 166, 0.05), rgba(255, 103, 166, 0.1));
+  color: #FF67A6;
+}
+
+.custom-dropdown-option.active {
+  color: #FF67A6;
+  font-weight: 600;
+  background: rgba(255, 103, 166, 0.08);
+}
+
+.filter-dropdown.open .custom-dropdown-option {
+  animation: fadeInUp 0.2s ease backwards;
+}
+
+.filter-dropdown.open .custom-dropdown-option:nth-child(1) { animation-delay: 0.02s; }
+.filter-dropdown.open .custom-dropdown-option:nth-child(2) { animation-delay: 0.04s; }
+.filter-dropdown.open .custom-dropdown-option:nth-child(3) { animation-delay: 0.06s; }
+.filter-dropdown.open .custom-dropdown-option:nth-child(4) { animation-delay: 0.08s; }
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.custom-dropdown-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-dropdown-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.custom-dropdown-list::-webkit-scrollbar-thumb {
+  background: #FF67A6;
+  border-radius: 10px;
+}
+.filter-dropdown .dropdown-arrow {
+  position: relative;
+  right: auto;
+  top: auto;
+  transform: none;
+  color: #FF67A6;
+  font-size: 12px;
+  transition: transform 0.3s ease;
+  pointer-events: none;
+}
+
+.filter-select {
+  position: absolute;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
 .modal {
   position: fixed;
   top: 0;
@@ -695,7 +830,6 @@ body,
 .profile-grid-item-overlay span {
   flex-shrink: 0;
 }
-/* Для меню троеточия */
 .post-card-menu {
   position: absolute !important;
   right: 10px;
@@ -918,7 +1052,6 @@ body,
   animation: shimmer 1.5s infinite;
 }
 
-/* Экшн-бар */
 .post-modal-actions {
   border-top: 1px solid rgba(255, 103, 166, 0.1);
   padding: 12px 20px;
@@ -948,6 +1081,10 @@ body,
 .action-icon:hover {
   transform: scale(1.1);
 }
+.action-icon:active {
+  transform: scale(0.95);
+}
+
 
 .action-icon svg {
   transition: all 0.2s ease;
@@ -1189,7 +1326,6 @@ body,
   }
 }
 
-/* Улучшаем оверлей */
 .profile-grid-item-overlay {
   background: linear-gradient(to top, rgba(255, 103, 166, 0.4) 0%, transparent 50%);
   opacity: 0;
@@ -1526,6 +1662,9 @@ body,
   color: #FF67A6;
   font-weight: 800;
 }
+.feed-post-header span:hover {
+text-decoration:underline;
+}
 
 .feed-post-image {
   width: 100%;
@@ -1547,6 +1686,15 @@ body,
   background: transparent;
   cursor: pointer;
   padding: 0;
+  transition: transform 0.2s ease;
+}
+
+.feed-post-actions button:hover {
+  transform: scale(1.1);
+}
+
+.feed-post-actions button:active {
+  transform: scale(0.95);
 }
 
 .feed-post-actions img {
@@ -5459,4 +5607,744 @@ body.dark-theme .comment-date {
 body.dark-theme .comment-like-btn,
 body.dark-theme .comment-delete-btn {
   color: #FEB6E7;
+}
+
+
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+}
+
+img {
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+  max-width: 100%;
+}
+
+button,
+.item,
+.settings,
+.profile-tab,
+.shop-card,
+.profile-grid-item,
+.interesting-post-card,
+.feed-post-actions button,
+.action-icon {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* fallback для браузеров, где backdrop-filter работает нестабильно */
+@supports not ((backdrop-filter: blur(4px)) or (-webkit-backdrop-filter: blur(4px))) {
+  .doll-card,
+  .search,
+  .shop-search,
+  .modal-overlay {
+    backdrop-filter: none;
+  }
+
+  .modal-overlay {
+    background: rgba(255, 103, 166, 0.55);
+  }
+}
+
+@supports (-webkit-backdrop-filter: blur(4px)) {
+  .modal-overlay {
+    -webkit-backdrop-filter: blur(4px);
+  }
+}
+
+/* Безопасные размеры для больших экранов */
+@media (min-width: 1400px) {
+  .main {
+    padding-left: 32px;
+    padding-right: 32px;
+  }
+
+  .dolls-grid {
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  }
+
+  .interesting-grid {
+    column-count: 5;
+  }
+}
+
+/* Ноутбуки и небольшие десктопы */
+@media (max-width: 1280px) {
+  .dolls-grid {
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  }
+
+  .feed-page {
+    padding-left: 40px;
+    max-width: 100%;
+  }
+
+  .feed-comments-panel {
+    left: calc(100% + 28px);
+    width: 360px;
+  }
+
+  .profile-shop-layout {
+    grid-template-columns: 1fr 360px;
+    gap: 28px;
+  }
+
+  .shop-topbar-search {
+    flex: 1 1 420px;
+    max-width: none;
+  }
+}
+
+/* Планшеты */
+@media (max-width: 1024px) {
+  .main {
+    padding: 0 18px 24px;
+  }
+
+  .topbar {
+    gap: 14px;
+  }
+
+  .search-wrapper,
+  .user-search-wrapper {
+    margin: 0 12px;
+  }
+
+  .search,
+  .user-search-wrapper .search {
+    width: 100%;
+  }
+
+  .topbar-right {
+    right: 18px;
+    gap: 18px;
+  }
+
+  .profile {
+    max-width: 100%;
+  }
+
+  .profile-header {
+    gap: 26px;
+  }
+
+  .profile-avatar {
+    width: 160px;
+    height: 160px;
+  }
+
+  .profile-shop-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-shop-grid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  }
+
+  .profile-reviews-panel {
+    min-height: auto;
+  }
+
+  .interesting-grid {
+    column-count: 3;
+  }
+
+  .shop-header,
+  .shop-filters {
+    flex-wrap: wrap;
+  }
+
+  .shop-header-right {
+    padding-right: 0;
+    margin-left: 0;
+  }
+
+  .product-ad-modal-content {
+    width: 94vw;
+  }
+
+  .product-ad-image-side {
+    flex-basis: 52%;
+  }
+}
+
+/* Мобильные устройства: сайдбар превращается в нижнее меню */
+@media (max-width: 768px) {
+  body {
+    background-attachment: scroll;
+    padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .sidebar {
+    left: 0;
+    right: 0;
+    top: auto;
+    bottom: 0;
+    width: 100%;
+    height: calc(72px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    overflow-x: auto;
+    overflow-y: visible;
+    box-shadow: 0 -6px 22px rgba(255, 103, 166, 0.18);
+  }
+
+  .sidebar:hover {
+    width: 100%;
+  }
+
+  .sidebar::before,
+  .logo-wrapper,
+  .item span,
+  .settings span {
+    display: none !important;
+  }
+
+  .nav {
+    flex: 1;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    gap: 4px;
+    min-width: max-content;
+    padding: 0 8px;
+  }
+
+  .item,
+  .settings {
+    width: 48px;
+    height: 48px;
+    margin: 0 2px;
+    border-radius: 18px;
+    flex: 0 0 48px;
+  }
+
+  .item img,
+  .settings img {
+    left: 50%;
+    width: 26px;
+    height: 26px;
+    transform: translate(-50%, -50%);
+  }
+
+  .item:hover img,
+  .settings:hover img,
+  .item:active img,
+  .settings:active img {
+    transform: translate(-50%, -50%) scale(0.96);
+    animation: none;
+  }
+
+  .main {
+    margin-left: 0;
+    padding: 0 14px calc(96px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .sidebar:hover ~ .main,
+  .sidebar:hover + .main {
+    margin-left: 0;
+  }
+
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 800;
+    align-items: center;
+    padding: 10px 0;
+  }
+
+  .topbar-right {
+    position: static;
+    margin-left: auto;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .avatar {
+    margin-top: 0;
+    width: 44px;
+    height: 44px;
+  }
+
+  .search-wrapper,
+  .user-search-wrapper,
+  .shop-topbar-search {
+    margin: 0;
+    padding-top: 0;
+    flex: 1 1 auto;
+  }
+
+  .search {
+    width: 100%;
+    padding: 6px 14px;
+  }
+
+  .search input {
+    font-size: 15px;
+    min-width: 0;
+  }
+
+  .filters,
+  .shop-filters {
+    justify-content: flex-start;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 8px;
+    scrollbar-width: none;
+  }
+
+  .filters::-webkit-scrollbar,
+  .shop-filters::-webkit-scrollbar {
+    display: none;
+  }
+
+  .filter-select,
+  .shop-filter-btn {
+    white-space: nowrap;
+  }
+
+  .dolls-grid,
+  .shop-grid,
+  .profile-shop-grid {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 18px;
+  }
+
+  .doll-name {
+    font-size: 16px;
+  }
+
+  .profile-header {
+    flex-direction: column;
+    text-align: center;
+    gap: 18px;
+  }
+
+  .profile-info-header {
+    flex-direction: column;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .profile-stats {
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 18px;
+  }
+
+  .profile-description {
+    text-align: left;
+  }
+
+  .profile-tabs {
+    justify-content: flex-start;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    scrollbar-width: none;
+  }
+
+  .profile-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .profile-tab {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  .profile-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+
+  .users-search-list {
+    max-width: 100%;
+  }
+
+  .feed-page {
+    align-items: center;
+    padding-left: 0;
+    gap: 28px;
+  }
+
+  .feed-post {
+    width: min(100%, 520px);
+  }
+
+  .feed-comments-panel {
+    position: static;
+    width: 100%;
+    height: min(420px, 70vh);
+    margin-top: 12px;
+    border-radius: 20px;
+  }
+
+  .interesting-grid {
+    column-count: 2;
+    padding: 10px 0 90px;
+  }
+
+  .shop-page {
+    padding: 0 0 90px;
+  }
+
+  .shop-header {
+    position: static;
+    gap: 14px;
+    margin-bottom: 20px;
+    background: transparent;
+  }
+
+  .shop-search {
+    flex: 1 1 100%;
+    max-width: none;
+    height: 52px;
+  }
+
+  .shop-header-right {
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .shop-categories-roof {
+    width: min(245px, 70vw);
+  }
+
+  .modal {
+    align-items: flex-end;
+  }
+
+  .modal-content,
+  .create-product-content,
+  .create-choice-content,
+  .cart-modal-content,
+  .followers-modal-content {
+    width: 100%;
+    max-width: 100%;
+    max-height: 92vh;
+    border-radius: 28px 28px 0 0;
+    padding: 20px;
+  }
+
+  #postViewModal .modal-content {
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+    max-height: 94vh;
+    border-radius: 28px 28px 0 0;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .post-modal-image {
+    width: 100%;
+    height: auto;
+    max-height: 48vh;
+    min-height: 260px;
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 103, 166, 0.1);
+  }
+
+  .post-modal-info {
+    flex: 1 1 auto;
+    width: 100%;
+    max-height: none;
+    border-radius: 0;
+  }
+
+  .post-modal-body {
+    overflow-y: auto;
+    max-height: 34vh;
+  }
+
+  .post-modal-actions {
+    border-radius: 0;
+  }
+
+  .product-ad-modal-content {
+    width: 100%;
+    height: auto;
+    max-height: 94vh;
+    border-radius: 28px 28px 0 0;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .product-ad-image-side {
+    flex: none;
+    width: 100%;
+    height: min(46vh, 420px);
+  }
+
+  .product-ad-info-side {
+    padding: 22px 18px;
+  }
+
+  .cart-item {
+    grid-template-columns: 64px 1fr auto;
+    gap: 10px;
+  }
+
+  .cart-item img {
+    width: 64px;
+    height: 64px;
+  }
+}
+
+/* Маленькие телефоны */
+@media (max-width: 480px) {
+  .main {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .topbar {
+    gap: 8px;
+  }
+
+  .search img:first-child {
+    width: 22px;
+    height: 22px;
+  }
+
+  .search input {
+    margin: 0 8px;
+    font-size: 14px;
+  }
+
+  .avatar {
+    width: 40px;
+    height: 40px;
+  }
+
+  .dolls-grid,
+  .shop-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .doll-info {
+    padding: 9px;
+  }
+
+  .doll-name,
+  .shop-card-description,
+  .profile-shop-title {
+    font-size: 14px;
+  }
+
+  .doll-series {
+    font-size: 12px;
+    padding: 4px 9px;
+  }
+
+  .profile-avatar {
+    width: 124px;
+    height: 124px;
+  }
+
+  .profile-info h1 {
+    font-size: 24px;
+    overflow-wrap: anywhere;
+  }
+
+  .profile-stats {
+    gap: 12px;
+    font-size: 14px;
+  }
+
+  .profile-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 3px;
+  }
+
+  .post-card-likes {
+    font-size: 14px;
+  }
+
+  .post-card-likes img {
+    width: 21px;
+    height: 21px;
+  }
+
+  .user-search-card {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .user-search-card img {
+    width: 48px;
+    height: 48px;
+  }
+
+  .feed-post {
+    border-radius: 18px;
+  }
+
+  .feed-post-header img {
+    width: 36px;
+    height: 36px;
+  }
+
+  .feed-post-image-wrapper {
+    max-height: 72vh;
+  }
+
+  .interesting-grid {
+    column-count: 1;
+  }
+
+  .shop-categories-roof {
+    width: 190px;
+    transform: scale(0.9);
+    transform-origin: left top;
+  }
+
+  .shop-filter-btn {
+    font-size: 14px;
+    padding: 10px 14px;
+  }
+
+  .create-choice-buttons,
+  .product-modal-actions,
+  .shop-price-row,
+  .shop-price-actions {
+    flex-direction: column;
+  }
+
+  .create-choice-btn {
+    width: 100%;
+    height: 104px;
+  }
+
+  .product-preview-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  #postViewModal .modal-content,
+  .modal-content,
+  .product-ad-modal-content {
+    border-radius: 0;
+    max-height: 100vh;
+  }
+
+  .post-modal-image {
+    min-height: 220px;
+    max-height: 42vh;
+  }
+
+  .post-modal-header,
+  .post-modal-body,
+  .post-modal-actions {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .comment-item {
+    grid-template-columns: 1fr 54px;
+  }
+
+  .comment-actions {
+    width: 54px;
+  }
+
+  .cart-item {
+    grid-template-columns: 56px 1fr;
+  }
+
+  .cart-item-price,
+  .cart-remove-btn {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .cart-item img {
+    width: 56px;
+    height: 56px;
+  }
+}
+
+/* Очень узкие экраны */
+@media (max-width: 360px) {
+  .item,
+  .settings {
+    width: 42px;
+    flex-basis: 42px;
+  }
+
+  .item img,
+  .settings img {
+    width: 23px;
+    height: 23px;
+  }
+
+  .dolls-grid,
+  .shop-grid {
+    gap: 10px;
+  }
+
+  .profile-tab {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+}
+
+/* Доступность: убираем тяжелые анимации, если пользователь отключил анимации в ОС */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* Fallback для старых браузеров без aspect-ratio */
+@supports not (aspect-ratio: 1 / 1) {
+  .doll-image,
+  .profile-grid-item,
+  .shop-card img,
+  .profile-shop-card img {
+    height: auto;
+  }
+
+  .profile-grid-item::before {
+    content: "";
+    display: block;
+    padding-top: 100%;
+  }
+
+  .profile-grid-item > img,
+  .profile-grid-item-overlay {
+    position: absolute;
+    inset: 0;
+  }
 }
