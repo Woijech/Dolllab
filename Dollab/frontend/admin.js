@@ -475,7 +475,7 @@ async function renderAdminUsers() {
                           Разблокировать
                         </button>
 
-                        <button onclick="alert('Жалобы пока заглушка')">
+                        <button onclick="openUserReportsModal('${user.id}')">
                           Посмотреть жалобы
                         </button>
                       </div>
@@ -731,7 +731,7 @@ async function renderAdminPosts() {
                             `
                         }
 
-                        <button onclick="alert('Просмотр поста пока заглушка')">
+                        <button onclick="openAdminPostViewModal('${post.id}')">
                           Посмотреть
                         </button>
                       </div>
@@ -917,7 +917,7 @@ async function renderAdminProductAds() {
                             `
                         }
 
-                        <button onclick="alert('Просмотр объявления пока заглушка')">
+                        <button onclick="openAdminProductAdViewModal('${ad.id}')">
                           Посмотреть
                         </button>
                       </div>
@@ -1648,6 +1648,206 @@ options: {
   }
 }
   });
+}
+
+window.openUserReportsModal = async function(userId) {
+  const reports = await getAdminReportsByUser(userId);
+
+  let modal = document.getElementById("adminUserReportsModal");
+
+  if (!modal) {
+    document.body.insertAdjacentHTML("beforeend", `
+      <div class="modal hidden" id="adminUserReportsModal">
+        <div class="modal-overlay" onclick="closeUserReportsModal()"></div>
+
+        <div class="modal-content admin-action-modal admin-wide-modal">
+          <img src="/icons/cross.svg" class="modal-close-icon" onclick="closeUserReportsModal()" alt="Закрыть">
+
+          <h2>Жалобы на пользователя</h2>
+
+          <div class="admin-modal-list" id="adminUserReportsList"></div>
+        </div>
+      </div>
+    `);
+
+    modal = document.getElementById("adminUserReportsModal");
+  }
+
+  const list = document.getElementById("adminUserReportsList");
+
+  list.innerHTML = reports.length > 0
+    ? reports.map(report => `
+      <div class="admin-modal-list-item">
+        <div class="admin-user-mini">
+          <img
+            class="admin-user-avatar"
+            src="${
+              report.reporter?.avatarUrl
+                ? `https://localhost:7145${report.reporter.avatarUrl}`
+                : "/icons/blank_pfp.jpg"
+            }"
+          >
+          <strong>${report.reporter?.username || "Пользователь"}</strong>
+        </div>
+
+        <p><b>Причина:</b> ${report.reason || "—"}</p>
+        <p><b>Описание:</b> ${report.description || "Описание не указано"}</p>
+        <p><b>Статус:</b> ${getAdminReportStatusText(report.status)}</p>
+        <p><b>Дата:</b> ${new Date(report.createdAt).toLocaleDateString("ru-RU")}</p>
+      </div>
+    `).join("")
+    : `<div class="section-placeholder">Жалоб на этого пользователя нет</div>`;
+
+  modal.classList.remove("hidden");
+  modal.classList.add("show");
+};
+
+window.closeUserReportsModal = function() {
+  const modal = document.getElementById("adminUserReportsModal");
+  if (!modal) return;
+
+  modal.classList.add("hidden");
+  modal.classList.remove("show");
+};
+
+window.openAdminPostViewModal = async function(postId) {
+  const post = await getAdminPostById(postId);
+  if (!post) return;
+
+  let modal = document.getElementById("adminPostViewModal");
+
+  if (!modal) {
+    document.body.insertAdjacentHTML("beforeend", `
+      <div class="modal hidden" id="adminPostViewModal">
+        <div class="modal-overlay" onclick="closeAdminPostViewModal()"></div>
+
+        <div class="modal-content admin-view-modal">
+          <img src="/icons/cross.svg" class="modal-close-icon" onclick="closeAdminPostViewModal()" alt="Закрыть">
+
+          <div id="adminPostViewContent"></div>
+        </div>
+      </div>
+    `);
+
+    modal = document.getElementById("adminPostViewModal");
+  }
+
+  document.getElementById("adminPostViewContent").innerHTML = `
+    <h2>Просмотр поста</h2>
+
+    <img
+      class="admin-view-image"
+      src="${post.imageUrl ? `https://localhost:7145${post.imageUrl}` : "/icons/blank_pfp.jpg"}"
+      alt=""
+    >
+
+    <div class="admin-user-mini">
+      <img
+        class="admin-user-avatar"
+        src="${post.user?.avatarUrl ? `https://localhost:7145${post.user.avatarUrl}` : "/icons/blank_pfp.jpg"}"
+      >
+      <strong>${post.user?.username || "Пользователь"}</strong>
+    </div>
+
+    <p><b>Описание:</b> ${post.description || "Описание отсутствует"}</p>
+    <p><b>Лайки:</b> ${post.likesCount ?? 0}</p>
+    <p><b>Избранное:</b> ${post.favoritesCount ?? 0}</p>
+    <p><b>Жалобы:</b> ${post.reportsCount ?? 0}</p>
+    <p><b>Статус:</b> ${post.isHidden ? "Скрыт" : "Отображается"}</p>
+    ${
+      post.hiddenReason
+        ? `<p><b>Причина скрытия:</b> ${post.hiddenReason}</p>`
+        : ""
+    }
+  `;
+
+  modal.classList.remove("hidden");
+  modal.classList.add("show");
+};
+
+window.closeAdminPostViewModal = function() {
+  const modal = document.getElementById("adminPostViewModal");
+  if (!modal) return;
+
+  modal.classList.add("hidden");
+  modal.classList.remove("show");
+};
+
+window.openAdminProductAdViewModal = async function(adId) {
+  const ad = await getAdminProductAdById(adId);
+  if (!ad) return;
+
+  let modal = document.getElementById("adminProductAdViewModal");
+
+  if (!modal) {
+    document.body.insertAdjacentHTML("beforeend", `
+      <div class="modal hidden" id="adminProductAdViewModal">
+        <div class="modal-overlay" onclick="closeAdminProductAdViewModal()"></div>
+
+        <div class="modal-content admin-view-modal">
+          <img src="/icons/cross.svg" class="modal-close-icon" onclick="closeAdminProductAdViewModal()" alt="Закрыть">
+
+          <div id="adminProductAdViewContent"></div>
+        </div>
+      </div>
+    `);
+
+    modal = document.getElementById("adminProductAdViewModal");
+  }
+
+  const firstImage = ad.images && ad.images.length > 0
+    ? ad.images[0].imageUrl
+    : "";
+
+  document.getElementById("adminProductAdViewContent").innerHTML = `
+    <h2>Просмотр объявления</h2>
+
+    <img
+      class="admin-view-image"
+      src="${firstImage ? `https://localhost:7145${firstImage}` : "/icons/blank_pfp.jpg"}"
+      alt=""
+    >
+
+    <div class="admin-user-mini">
+      <img
+        class="admin-user-avatar"
+        src="${ad.user?.avatarUrl ? `https://localhost:7145${ad.user.avatarUrl}` : "/icons/blank_pfp.jpg"}"
+      >
+      <strong>${ad.user?.username || "Пользователь"}</strong>
+    </div>
+
+    <p><b>Название:</b> ${ad.title || "Без названия"}</p>
+    <p><b>Описание:</b> ${ad.description || "Описание отсутствует"}</p>
+    <p><b>Категория:</b> ${ad.category?.name || "—"}</p>
+    <p><b>Цена:</b> ${ad.price ?? 0}р</p>
+    <p><b>Жалобы:</b> ${ad.reportsCount ?? 0}</p>
+    <p><b>Статус:</b> ${ad.isHidden ? "Скрыто" : "Отображается"}</p>
+    ${
+      ad.hiddenReason
+        ? `<p><b>Причина скрытия:</b> ${ad.hiddenReason}</p>`
+        : ""
+    }
+  `;
+
+  modal.classList.remove("hidden");
+  modal.classList.add("show");
+};
+
+window.closeAdminProductAdViewModal = function() {
+  const modal = document.getElementById("adminProductAdViewModal");
+  if (!modal) return;
+
+  modal.classList.add("hidden");
+  modal.classList.remove("show");
+};
+
+function getAdminReportStatusText(status) {
+  switch (status) {
+    case 0: return "На рассмотрении";
+    case 1: return "Рассмотрена";
+    case 2: return "Отклонена";
+    default: return "Неизвестно";
+  }
 }
   handleAdminDeepLink();
 

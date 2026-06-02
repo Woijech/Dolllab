@@ -50,10 +50,14 @@ namespace Dollab_Backend.Controllers
         {
             var post = await _context.Posts
                 .Include(p => p.User)
+                .Include(p => p.Likes)
+                .Include(p => p.Favorites)
+                .Where(p => p.Id == id)
                 .Select(p => new
                 {
                     p.Id,
                     p.Description,
+                    p.ImageUrl,
                     p.CreatedAt,
 
                     p.IsHidden,
@@ -63,10 +67,16 @@ namespace Dollab_Backend.Controllers
                     User = new
                     {
                         p.User.Id,
-                        p.User.Username
-                    }
+                        p.User.Username,
+                        AvatarUrl = p.User.AvatarUrl ?? ""
+                    },
+
+                    LikesCount = p.Likes.Count,
+                    FavoritesCount = p.Favorites.Count,
+
+                    ReportsCount = _context.Reports.Count(r => r.ReportedPostId == p.Id)
                 })
-                .FirstOrDefaultAsync(p => p.Id == id);
+                .FirstOrDefaultAsync();
 
             if (post == null)
                 return NotFound("Пост не найден");

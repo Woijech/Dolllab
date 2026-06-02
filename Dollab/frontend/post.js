@@ -3,7 +3,7 @@ const API_POSTS = "https://localhost:7145/api/post";
 // Получение моих постов
 async function getMyPosts(token) {
   try {
-    console.log('🔍 Загрузка моих постов...');
+    console.log('Загрузка моих постов...');
     const res = await fetch(`${API_POSTS}/my`, {
       headers: {
         Authorization: `Bearer ${token}`
@@ -20,7 +20,7 @@ async function getMyPosts(token) {
     if (!text) return [];
     
     const data = JSON.parse(text);
-    console.log('✅ Посты загружены:', data);
+    console.log('Посты загружены:', data);
     return data;
   } catch (error) {
     console.error('Ошибка получения постов:', error);
@@ -28,10 +28,9 @@ async function getMyPosts(token) {
   }
 }
 
-// Получение поста по ID
 async function getPostById(postId) {
   try {
-    console.log('🔍 Загрузка поста:', postId);
+    console.log('Загрузка поста:', postId);
     const token = localStorage.getItem("token");
     const res = await fetch(`${API_POSTS}/${postId}`, {
       headers: {
@@ -53,7 +52,7 @@ async function getPostById(postId) {
 // Создание поста
 async function createPost(token, data) {
   try {
-    console.log('📤 Создание поста...');
+    console.log('Создание поста');
     
     const formData = new FormData();
 
@@ -93,10 +92,9 @@ async function createPost(token, data) {
   }
 }
 
-// Обновление поста
 async function updatePost(token, postId, data) {
   try {
-    console.log('✏️ Обновление поста:', postId);
+    console.log('Обновление поста:', postId);
     
     const formData = new FormData();
 
@@ -133,10 +131,9 @@ async function updatePost(token, postId, data) {
   }
 }
 
-// Удаление поста
 async function deletePost(token, postId) {
   try {
-    console.log('🗑️ Удаление поста:', postId);
+    console.log('Удаление поста:', postId);
     
     const res = await fetch(`${API_POSTS}/${postId}`, {
       method: "DELETE",
@@ -206,46 +203,100 @@ async function getUserProfile(userId) {
   return await res.json();
 }
 
-async function getComments(postId) {
-  const response = await fetch(`${API_URL}/api/post/${postId}/comments`);
+async function loadComments(postId) {
+  const token = localStorage.getItem("token");
 
-  if (!response.ok) {
-    throw new Error("Ошибка загрузки комментариев");
-  }
-
-  return await response.json();
-}
-
-async function createComment(postId, text, token) {
-  const response = await fetch(`${API_URL}/api/post/${postId}/comments`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`
-    },
-    body: JSON.stringify({ text })
-  });
-
-  if (!response.ok) {
-    throw new Error("Ошибка создания комментария");
-  }
-
-  return await response.json();
-}
-
-async function deleteComment(commentId, token) {
-  const response = await fetch(`${API_URL}/api/post/comments/${commentId}`, {
-    method: "DELETE",
+  const res = await fetch(`${API_URL}/api/post/${postId}/comments`, {
     headers: {
       Authorization: `Bearer ${token}`
     }
   });
 
-  if (!response.ok) {
-    throw new Error("Ошибка удаления комментария");
+  if (!res.ok) {
+    console.error("Ошибка загрузки комментариев:", await res.text());
+    return;
   }
 
-  return await response.json();
+  const comments = await res.json();
+  const commentsList = document.getElementById("postModalCommentsList");
+
+  commentsList.innerHTML = comments.length > 0
+    ? comments.map(comment => renderCommentThread(comment, postId)).join("")
+    : `<div class="comments-empty">Комментариев пока нет</div>`;
+}
+
+async function createComment(postId, text, token, parentCommentId = null) {
+  const res = await fetch(`${API_URL}/api/post/${postId}/comments`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      text,
+      parentCommentId
+    })
+  });
+
+  if (!res.ok) {
+    alert(await res.text());
+    return null;
+  }
+
+  return await res.json();
+}
+
+async function getComments(postId) {
+  const token = localStorage.getItem("token");
+
+  const res = await fetch(`${API_URL}/api/post/${postId}/comments`, {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
+
+  if (!res.ok) {
+    console.error("Ошибка загрузки комментариев:", await res.text());
+    return [];
+  }
+
+  return await res.json();
+}
+
+async function deleteComment(commentId) {
+  const token = localStorage.getItem("token");
+
+  const res = await fetch(`${API_POSTS}/comments/${commentId}`, {
+    method: "DELETE",
+    headers: {
+      "Authorization": `Bearer ${token}`
+    }
+  });
+
+  if (!res.ok) {
+    console.error("Ошибка удаления комментария:", res.status, await res.text());
+    return null;
+  }
+
+  return await res.json();
+}
+
+async function toggleCommentLike(commentId) {
+  const token = localStorage.getItem("token");
+
+  const res = await fetch(`${API_URL}/api/post/comments/${commentId}/like`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
+
+  if (!res.ok) {
+    alert(await res.text());
+    return null;
+  }
+
+  return await res.json();
 }
 
 async function togglePostFavorite(token, postId) {
@@ -304,22 +355,6 @@ async function getInterestingPosts(token) {
   if (!res.ok) {
     console.error("Ошибка загрузки интересного:", res.status, await res.text());
     return [];
-  }
-
-  return await res.json();
-}
-
-async function deleteComment(commentId, token) {
-  const res = await fetch(`https://localhost:7145/api/post/comments/${commentId}`, {
-    method: "DELETE",
-    headers: {
-      Authorization: `Bearer ${token}`
-    }
-  });
-
-  if (!res.ok) {
-    console.error("Ошибка удаления комментария:", res.status, await res.text());
-    return null;
   }
 
   return await res.json();

@@ -315,6 +315,26 @@ public class ProfileController : ControllerBase
         return Ok(users);
     }
 
+    [HttpGet("users/by-username/{username}")]
+    [Authorize]
+    public async Task<IActionResult> GetUserByUsername(string username)
+    {
+        var user = await _context.Users
+            .Where(u => u.Username == username)
+            .Select(u => new
+            {
+                u.Id,
+                u.Username,
+                AvatarUrl = u.AvatarUrl ?? ""
+            })
+            .FirstOrDefaultAsync();
+
+        if (user == null)
+            return NotFound();
+
+        return Ok(user);
+    }
+
     [HttpPost("{id}/follow")]
     [Authorize]
     public async Task<IActionResult> ToggleFollow(int id)

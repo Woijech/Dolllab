@@ -441,3 +441,48 @@ async function getAdminUserRequests(status = null) {
 
   return await res.json();
 }
+
+async function getAdminReportsByUser(userId) {
+  const token = localStorage.getItem("token");
+
+  const res = await fetch(`${API_ADMIN_REPORTS}/user/${userId}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+
+  if (!res.ok) {
+    alert(await res.text());
+    return [];
+  }
+
+  return await res.json();
+}
+
+async function getAdminPostById(postId) {
+  const token = localStorage.getItem("token");
+
+  const res = await fetch(`${API_ADMIN_POSTS}/${postId}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+
+  if (!res.ok) {
+    alert(await res.text());
+    return null;
+  }
+
+  return await res.json();
+}
+
+async function getAdminProductAdById(adId) {
+  const token = localStorage.getItem("token");
+
+  const res = await fetch(`${API_ADMIN_PRODUCT_ADS}/${adId}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+
+  if (!res.ok) {
+    alert(await res.text());
+    return null;
+  }
+
+  return await res.json();
+}

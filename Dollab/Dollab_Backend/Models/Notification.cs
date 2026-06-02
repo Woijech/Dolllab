@@ -7,17 +7,20 @@
         Comment = 3,
         Review = 4,
         NewPost = 5,
-        FollowRequest = 6
+        FollowRequest = 6,
+        CommentLike = 7,
+        Mention = 8,
+        CommentReply=9
     }
 
     public class Notification
     {
         public int Id { get; set; }
 
-        public int UserId { get; set; }          // кому пришло уведомление
+        public int UserId { get; set; }          
         public User User { get; set; }
 
-        public int FromUserId { get; set; }      // кто сделал действие
+        public int FromUserId { get; set; }  
         public User FromUser { get; set; }
 
         public NotificationType Type { get; set; }

@@ -29,6 +29,7 @@ public class AppDbContext : DbContext
     public DbSet<Report> Reports { get; set; }
     public DbSet<UserRequest> UserRequests { get; set; }
     public DbSet<UserRequestImage> UserRequestImages { get; set; }
+    public DbSet<CommentLike> CommentLikes { get; set; }
 
     public AppDbContext(DbContextOptions<AppDbContext> options)
         : base(options)
@@ -52,10 +53,10 @@ public class AppDbContext : DbContext
             .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<ProductAd>()
-    .HasOne(p => p.User)
-    .WithMany(u => u.ProductAds)
-    .HasForeignKey(p => p.UserId)
-    .OnDelete(DeleteBehavior.Cascade);
+            .HasOne(p => p.User)
+            .WithMany(u => u.ProductAds)
+            .HasForeignKey(p => p.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<ProductAd>()
             .HasOne(p => p.Category)
@@ -70,10 +71,10 @@ public class AppDbContext : DbContext
             .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<CartItem>()
-    .HasOne(c => c.User)
-    .WithMany(u => u.CartItems)
-    .HasForeignKey(c => c.UserId)
-    .OnDelete(DeleteBehavior.Cascade);
+            .HasOne(c => c.User)
+            .WithMany(u => u.CartItems)
+            .HasForeignKey(c => c.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<CartItem>()
             .HasOne(c => c.ProductAd)
@@ -86,10 +87,10 @@ public class AppDbContext : DbContext
             .IsUnique();
 
         modelBuilder.Entity<UserReview>()
-    .HasOne(r => r.Reviewer)
-    .WithMany(u => u.ReviewsWritten)
-    .HasForeignKey(r => r.ReviewerId)
-    .OnDelete(DeleteBehavior.Restrict);
+            .HasOne(r => r.Reviewer)
+            .WithMany(u => u.ReviewsWritten)
+            .HasForeignKey(r => r.ReviewerId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<UserReview>()
             .HasOne(r => r.ReviewedUser)
@@ -102,10 +103,10 @@ public class AppDbContext : DbContext
             .IsUnique();
 
         modelBuilder.Entity<Notification>()
-    .HasOne(n => n.User)
-    .WithMany()
-    .HasForeignKey(n => n.UserId)
-    .OnDelete(DeleteBehavior.Cascade);
+            .HasOne(n => n.User)
+            .WithMany()
+            .HasForeignKey(n => n.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<Notification>()
             .HasOne(n => n.FromUser)
@@ -120,10 +121,10 @@ public class AppDbContext : DbContext
             .OnDelete(DeleteBehavior.SetNull);
 
         modelBuilder.Entity<FollowRequest>()
-    .HasOne(fr => fr.Requester)
-    .WithMany()
-    .HasForeignKey(fr => fr.RequesterId)
-    .OnDelete(DeleteBehavior.Restrict);
+            .HasOne(fr => fr.Requester)
+            .WithMany()
+            .HasForeignKey(fr => fr.RequesterId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<FollowRequest>()
             .HasOne(fr => fr.TargetUser)
@@ -132,10 +133,10 @@ public class AppDbContext : DbContext
             .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<BlockedUser>()
-    .HasOne(b => b.Blocker)
-    .WithMany()
-    .HasForeignKey(b => b.BlockerId)
-    .OnDelete(DeleteBehavior.Restrict);
+            .HasOne(b => b.Blocker)
+            .WithMany()
+            .HasForeignKey(b => b.BlockerId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<BlockedUser>()
             .HasOne(b => b.Blocked)
@@ -146,5 +147,27 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<BlockedUser>()
             .HasIndex(b => new { b.BlockerId, b.BlockedId })
             .IsUnique();
+
+        modelBuilder.Entity<Comment>()
+            .HasOne(c => c.ParentComment)
+            .WithMany(c => c.Replies)
+            .HasForeignKey(c => c.ParentCommentId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<CommentLike>()
+            .HasIndex(cl => new { cl.UserId, cl.CommentId })
+            .IsUnique();
+
+        modelBuilder.Entity<CommentLike>()
+            .HasOne(cl => cl.User)
+            .WithMany(u => u.CommentLikes)
+            .HasForeignKey(cl => cl.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<CommentLike>()
+            .HasOne(cl => cl.Comment)
+            .WithMany(c => c.Likes)
+            .HasForeignKey(cl => cl.CommentId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

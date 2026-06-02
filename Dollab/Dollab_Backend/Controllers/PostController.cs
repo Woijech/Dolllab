@@ -54,9 +54,9 @@ public class PostController : ControllerBase
         _context.Posts.Add(post);
         await _context.SaveChangesAsync();
         var followerIds = await _context.Follows
-    .Where(f => f.FollowingId == userId)
-    .Select(f => f.FollowerId)
-    .ToListAsync();
+            .Where(f => f.FollowingId == userId)
+            .Select(f => f.FollowerId)
+            .ToListAsync();
 
         foreach (var followerId in followerIds)
         {
@@ -65,6 +65,21 @@ public class PostController : ControllerBase
                 fromUserId: userId,
                 type: NotificationType.NewPost,
                 message: "добавил новый пост",
+                postId: post.Id
+            );
+        }
+        var mentionedUsers = await GetMentionedUsersAsync(post.Description);
+
+        foreach (var mentionedUser in mentionedUsers)
+        {
+            if (mentionedUser.Id == userId)
+                continue;
+
+            await _notificationService.CreateNotificationAsync(
+                userId: mentionedUser.Id,
+                fromUserId: userId,
+                type: NotificationType.Mention,
+                message: "упомянул вас в посте",
                 postId: post.Id
             );
         }
@@ -118,7 +133,21 @@ public class PostController : ControllerBase
         }
 
         await _context.SaveChangesAsync();
+        var mentionedUsers = await GetMentionedUsersAsync(post.Description);
 
+        foreach (var mentionedUser in mentionedUsers)
+        {
+            if (mentionedUser.Id == userId)
+                continue;
+
+            await _notificationService.CreateNotificationAsync(
+                userId: mentionedUser.Id,
+                fromUserId: userId,
+                type: NotificationType.Mention,
+                message: "упомянул вас в посте",
+                postId: post.Id
+            );
+        }
         return Ok(new
         {
             message = "Post updated",
@@ -244,12 +273,12 @@ public class PostController : ControllerBase
         }
 
         await _notificationService.CreateNotificationAsync(
-userId: post.UserId,
-fromUserId: userId,
-type: NotificationType.Like,
-message: "лайкнул ваш пост",
-postId: post.Id
-);
+            userId: post.UserId,
+            fromUserId: userId,
+            type: NotificationType.Like,
+            message: "лайкнул ваш пост",
+            postId: post.Id
+            );
         await _context.SaveChangesAsync();
 
 
@@ -263,8 +292,11 @@ postId: post.Id
     }
 
     [HttpGet("{id}/comments")]
+    [Authorize]
     public async Task<IActionResult> GetComments(int id)
     {
+        var currentUserId = User.GetUserId();
+
         var postExists = await _context.Posts.AnyAsync(p => p.Id == id);
 
         if (!postExists)
@@ -273,22 +305,48 @@ postId: post.Id
         var comments = await _context.Comments
             .Where(c => c.PostId == id)
             .Include(c => c.User)
+            .Include(c => c.Likes)
             .OrderByDescending(c => c.CreatedAt)
+            .ToListAsync();
+
+        var result = comments
+            .Where(c => c.ParentCommentId == null)
             .Select(c => new
             {
                 c.Id,
                 c.Text,
                 c.CreatedAt,
+                LikesCount = c.Likes.Count,
+                IsLikedByCurrentUser = c.Likes.Any(l => l.UserId == currentUserId),
+                RepliesCount = comments.Count(r => r.ParentCommentId == c.Id),
                 Author = new
                 {
                     c.User.Id,
                     c.User.Username,
                     AvatarUrl = c.User.AvatarUrl ?? ""
-                }
+                },
+                Replies = comments
+                    .Where(r => r.ParentCommentId == c.Id)
+                    .OrderBy(r => r.CreatedAt)
+                    .Select(r => new
+                    {
+                        r.Id,
+                        r.Text,
+                        r.CreatedAt,
+                        LikesCount = r.Likes.Count,
+                        IsLikedByCurrentUser = r.Likes.Any(l => l.UserId == currentUserId),
+                        Author = new
+                        {
+                            r.User.Id,
+                            r.User.Username,
+                            AvatarUrl = r.User.AvatarUrl ?? ""
+                        }
+                    })
+                    .ToList()
             })
-            .ToListAsync();
+            .ToList();
 
-        return Ok(comments);
+        return Ok(result);
     }
 
     [HttpPost("{id}/comments")]
@@ -297,7 +355,9 @@ postId: post.Id
     {
         var userId = User.GetUserId();
 
-        var post = await _context.Posts.FindAsync(id);
+        var post = await _context.Posts
+            .Include(p => p.User)
+            .FirstOrDefaultAsync(p => p.Id == id);
 
         if (post == null)
             return NotFound("Post not found");
@@ -308,32 +368,90 @@ postId: post.Id
         if (dto.Text.Length > 500)
             return BadRequest("Comment is too long");
 
+        Comment? parentComment = null;
+
+        if (dto.ParentCommentId.HasValue)
+        {
+            parentComment = await _context.Comments
+                .Include(c => c.User)
+                .FirstOrDefaultAsync(c =>
+                    c.Id == dto.ParentCommentId.Value &&
+                    c.PostId == id);
+
+            if (parentComment == null)
+                return BadRequest("Parent comment not found");
+
+            if (parentComment.ParentCommentId.HasValue)
+            {
+                dto.ParentCommentId = parentComment.ParentCommentId;
+            }
+        }
+
         var comment = new Comment
         {
             Text = dto.Text.Trim(),
             UserId = userId,
-            PostId = id
+            PostId = id,
+            ParentCommentId = dto.ParentCommentId
         };
 
         _context.Comments.Add(comment);
-
         await _context.SaveChangesAsync();
 
-        await _notificationService.CreateNotificationAsync(
-            userId: post.UserId,
-            fromUserId: userId,
-            type: NotificationType.Comment,
-            message: "прокомментировал ваш пост",
-            postId: post.Id
-        );
-
         var user = await _context.Users.FindAsync(userId);
+
+        if (post.UserId != userId && dto.ParentCommentId == null)
+        {
+            await _notificationService.CreateNotificationAsync(
+                userId: post.UserId,
+                fromUserId: userId,
+                type: NotificationType.Comment,
+                message: $"{user.Username} прокомментировал ваш пост",
+                postId: post.Id
+            );
+        }
+
+        if (parentComment != null && parentComment.UserId != userId)
+        {
+            var parentCommentAuthor = await _context.Users
+                .FirstOrDefaultAsync(u => u.Id == parentComment.UserId);
+
+            if (parentCommentAuthor != null && parentCommentAuthor.NotifyCommentReplies)
+            {
+                await _notificationService.CreateNotificationAsync(
+                    userId: parentComment.UserId,
+                    fromUserId: userId,
+                    type: NotificationType.CommentReply,
+                    message: $"{user.Username} ответил на ваш комментарий",
+                    postId: post.Id
+                );
+            }
+        }
+
+        var mentionedUsers = await GetMentionedUsersAsync(comment.Text);
+
+        foreach (var mentionedUser in mentionedUsers)
+        {
+            if (mentionedUser.Id == userId)
+                continue;
+
+            await _notificationService.CreateNotificationAsync(
+                userId: mentionedUser.Id,
+                fromUserId: userId,
+                type: NotificationType.Mention,
+                message: "упомянул вас в комментарии",
+                postId: post.Id
+            );
+        }
 
         return Ok(new
         {
             comment.Id,
             comment.Text,
             comment.CreatedAt,
+            comment.ParentCommentId,
+            LikesCount = 0,
+            IsLikedByCurrentUser = false,
             Author = new
             {
                 user!.Id,
@@ -350,18 +468,119 @@ postId: post.Id
         var userId = User.GetUserId();
 
         var comment = await _context.Comments
+            .Include(c => c.Post)
+            .Include(c => c.Replies)
             .FirstOrDefaultAsync(c => c.Id == commentId);
 
         if (comment == null)
             return NotFound();
 
-        if (comment.UserId != userId)
+        var isCommentAuthor = comment.UserId == userId;
+        var isPostAuthor = comment.Post.UserId == userId;
+
+        if (!isCommentAuthor && !isPostAuthor)
             return Forbid();
 
+        var replies = await _context.Comments
+            .Where(c => c.ParentCommentId == comment.Id)
+            .ToListAsync();
+
+        _context.Comments.RemoveRange(replies);
         _context.Comments.Remove(comment);
+
         await _context.SaveChangesAsync();
 
         return Ok(new { message = "Comment deleted" });
+    }
+
+    [HttpPost("comments/{commentId}/like")]
+    [Authorize]
+    public async Task<IActionResult> ToggleCommentLike(int commentId)
+    {
+        var userId = User.GetUserId();
+        var user = await _context.Users.FindAsync(userId);
+
+
+        var comment = await _context.Comments
+            .Include(c => c.Likes)
+            .FirstOrDefaultAsync(c => c.Id == commentId);
+
+        if (comment == null)
+            return NotFound("Comment not found");
+
+        var existingLike = await _context.CommentLikes
+            .FirstOrDefaultAsync(l =>
+                l.CommentId == commentId &&
+                l.UserId == userId);
+
+        var isLiked = false;
+
+        if (existingLike == null)
+        {
+            var like = new CommentLike
+            {
+                CommentId = commentId,
+                UserId = userId
+            };
+
+            _context.CommentLikes.Add(like);
+            isLiked = true;
+
+            if (comment.UserId != userId)
+            {
+                var commentAuthor = await _context.Users
+                    .FirstOrDefaultAsync(u => u.Id == comment.UserId);
+
+                if (commentAuthor != null && commentAuthor.NotifyCommentLikes)
+                {
+                    await _notificationService.CreateNotificationAsync(
+                        userId: comment.UserId,
+                        fromUserId: userId,
+                        type: NotificationType.CommentLike,
+                        message: $"{user.Username} лайкнул ваш комментарий",
+                        postId: comment.PostId
+                    );
+                }
+            }
+        }
+        else
+        {
+            _context.CommentLikes.Remove(existingLike);
+            isLiked = false;
+        }
+
+        await _context.SaveChangesAsync();
+
+        var likesCount = await _context.CommentLikes
+            .CountAsync(l => l.CommentId == commentId);
+
+        return Ok(new
+        {
+            isLiked,
+            likesCount
+        });
+    }
+
+    private async Task<List<User>> GetMentionedUsersAsync(string text)
+    {
+        var matches = System.Text.RegularExpressions.Regex.Matches(
+            text,
+            @"@([a-zA-Z0-9_а-яА-ЯёЁ]+)"
+        );
+
+        var usernames = matches
+            .Select(m => m.Groups[1].Value)
+            .Distinct()
+            .ToList();
+
+        if (!usernames.Any())
+            return new List<User>();
+
+        var users = await _context.Users
+            .Where(u => usernames.Contains(u.Username))
+            .ToListAsync();
+
+        return users;
     }
 
     [HttpPost("{id}/favorite")]

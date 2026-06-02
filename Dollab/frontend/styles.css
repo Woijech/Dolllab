@@ -834,7 +834,7 @@ body,
 }
 
 .post-modal-info {
-  flex: 0 0 360px;   /* фиксируем ширину */
+  flex: 0 0 360px;
   display: flex;
   flex-direction: column;
   max-height: 580px;
@@ -842,6 +842,7 @@ body,
   position: relative;
   border-radius: 0 32px 32px 0;
   justify-content: flex-start;
+  overflow: hidden;
 }
 
 /* Хедер с автором */
@@ -875,10 +876,9 @@ body,
   font-size: 15px;
 }
 
-/* Контент */
 .post-modal-body {
   flex: 1;
-  overflow-y: auto;
+  overflow: hidden;
   padding: 20px;
   background: #FFFAFD;
   justify-content: flex-start;
@@ -904,7 +904,6 @@ body,
   white-space: pre-wrap;
 }
 
-/* Скелетоны */
 .skeleton {
   background: linear-gradient(90deg, #FFE4F0 0%, #FFD1EC 50%, #FFE4F0 100%);
   background-size: 200% 100%;
@@ -1309,20 +1308,37 @@ body,
 }
 
 .post-modal-comments {
+  height: 100%;
   align-self: flex-start;
-  margin-top: 0; /* чтобы не отталкивался вниз */
-  max-height: 200px;
+  margin-top: 0;
+  max-height: 420px;
   overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 5px;
+
 }
 
 .comment-item {
-  display: flex;
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 70px;
+
+  align-items: start;
+
+  gap: 12px;
+
+  width: 100%;
   flex-wrap: wrap;
   gap: 4px;
   margin-bottom: 12px;
   font-size: 13px;
   line-height: 1.4;
   color: #FFA3C8;
+  box-sizing: border-box;
+}
+.comment-main {
+  width: 100%;
+  min-width: 0;
 }
 
 .comment-username {
@@ -2826,11 +2842,6 @@ body,
   width: 25px;
   height: 25px;
   object-fit: contain;
-}
-
-.comment-item {
-  position: relative;
-  align-items: center;
 }
 
 .comment-delete-btn {
@@ -5275,4 +5286,177 @@ body.dark-theme .user-request-admin-comment {
 body.dark-theme .secondary-user-request-btn {
   border-color: #FEB6E7 !important;
   color: #FEB6E7 !important;
+}
+
+.comment-thread {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  overflow: visible;
+}
+
+.comment-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.comment-body {
+  flex: 1;
+}
+
+.comment-top {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.comment-author {
+  color: #FF67A6;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.comment-date {
+  color: #F4A6C9;
+  font-size: 12px;
+}
+
+.comment-text {  
+  display: inline;
+  white-space: normal;
+  color: #6b4b5d;
+  font-size: 14px;
+  margin-top: 3px;
+  overflow-wrap: anywhere;
+  color: #FFA3C8;  
+  word-break: break-word;
+
+}
+
+.comment-reply-btn,
+.comment-toggle-replies-btn {
+  border: none;
+  background: transparent;
+  color: #FF67A6;
+  font-weight: 800;
+  cursor: pointer;
+  margin-top: 4px;
+  padding: 0;
+}
+
+.comment-hidden-replies.hidden {
+  display: none;
+}
+
+.comment-mention {
+  color: #FF67A6;
+  font-weight: 900;
+}
+
+body.dark-theme .comment-author,
+body.dark-theme .comment-reply-btn,
+body.dark-theme .comment-toggle-replies-btn,
+body.dark-theme .comment-mention {
+  color: #FEB6E7;
+}
+
+body.dark-theme .comment-text {
+  color: #DDD6F7;
+}
+
+body.dark-theme .comment-date {
+  color: #CFC3EA;
+}
+
+.comment-item:hover .comment-text {
+  opacity: 0.75;
+}
+
+.comment-reply-item {
+  margin-left: 32px;
+  width: calc(100% - 36px);
+
+}
+
+.comment-toggle-btn {
+  border: none;
+  background: transparent;
+  color: #FF67A6;
+  font-weight: 800;
+  cursor: pointer;
+  margin-left: 36px;
+}
+
+.hidden {
+  display: none;
+}
+
+.comment-actions {
+  width: 68px;
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
+  margin-top: 6px;
+  top: 0;
+  right: 0;
+}
+
+.comment-like-btn,
+.comment-delete-btn {
+  border: none;
+  background: transparent;
+
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  color: #FF67A6;
+
+  cursor: pointer;
+
+  font-weight: 800;
+  transition: transform 0.2s ease;
+
+}
+
+.comment-like-btn:hover,
+.comment-delete-btn:hover {
+  transform: scale(1.15);
+}
+
+.comment-like-btn:active,
+.comment-delete-btn:active {
+  transform: scale(0.95);
+}
+
+.comment-like-btn img,
+.comment-delete-btn img {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.18s ease;
+}
+
+.liked-pop {
+  animation: likePop 0.18s ease-out;
+}
+
+@keyframes likePop {
+  from {
+    transform: scale(1);
+  }
+
+  to {
+    transform: scale(1.15);
+  }
+}
+
+body.dark-theme .comment-like-btn,
+body.dark-theme .comment-delete-btn {
+  color: #FEB6E7;
 }

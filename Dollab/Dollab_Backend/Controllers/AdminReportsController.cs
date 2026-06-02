@@ -197,5 +197,43 @@ namespace Dollab_Backend.Controllers
 
             return Ok("Жалоба отклонена");
         }
+
+        [HttpGet("user/{userId}")]
+        public async Task<IActionResult> GetReportsByUser(int userId)
+        {
+            var reports = await _context.Reports
+                .Include(r => r.Reporter)
+                .Include(r => r.ReportedUser)
+                .Where(r => r.ReportedUserId == userId)
+                .OrderByDescending(r => r.CreatedAt)
+                .Select(r => new
+                {
+                    r.Id,
+                    r.Type,
+                    r.Reason,
+                    r.Description,
+                    r.Status,
+                    r.AdminComment,
+                    r.CreatedAt,
+                    r.ReviewedAt,
+
+                    Reporter = new
+                    {
+                        r.Reporter.Id,
+                        r.Reporter.Username,
+                        AvatarUrl = r.Reporter.AvatarUrl ?? ""
+                    },
+
+                    ReportedUser = r.ReportedUser == null ? null : new
+                    {
+                        r.ReportedUser.Id,
+                        r.ReportedUser.Username,
+                        AvatarUrl = r.ReportedUser.AvatarUrl ?? ""
+                    }
+                })
+                .ToListAsync();
+
+            return Ok(reports);
+        }
     }
 }

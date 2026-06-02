@@ -6,5 +6,7 @@
         public bool NotifyFollowers { get; set; }
         public bool NotifyComments { get; set; }
         public bool NotifyReviews { get; set; }
+        public bool NotifyCommentLikes { get; set; }
+        public bool NotifyCommentReplies { get; set; }
     }
 }

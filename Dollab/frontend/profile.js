@@ -1,6 +1,6 @@
 const API_PROFILE = "https://localhost:7145/api/profile";
 
-// 👤 Мой профиль
+// Мой профиль
 async function getMyProfile(token) {
   try {
     const res = await fetch(`${API_PROFILE}/me/full`, {
@@ -24,7 +24,6 @@ async function getMyProfile(token) {
   }
 }
 
-// 👥 Чужой профиль
 async function getUserProfile(id) {
   try {
     const token = localStorage.getItem("token");
@@ -98,7 +97,6 @@ async function updateProfile(token, data) {
   }
 }
 
-// Загрузка аватарки пользователя для хедера
 async function loadUserAvatar() {
   const token = localStorage.getItem("token");
   try {

@@ -12,6 +12,8 @@ let shopFilters = {
 };
 let cartProductIds = new Set();
 let currentPostId = null;
+let replyingToCommentId = null;
+let currentOpenedPostAuthorId = null;
 
 const contentArea = document.getElementById("contentArea");
 const menuItems = document.querySelectorAll(".item");
@@ -103,7 +105,13 @@ async function openPostModal(postId) {
   try {
     currentPostId = postId;
     const post = await getPostById(postId);
-    console.log('📱 Открываем пост:', post);
+    console.log('Открываем пост:', post);
+
+    currentOpenedPostAuthorId =
+      post.author?.id ||
+      post.userId ||
+      post.authorId ||
+      null;
 
     createPostViewModal();
 
@@ -123,7 +131,6 @@ async function openPostModal(postId) {
     const usernameEl = document.getElementById('postModalUsername');
 usernameEl.textContent = username;
 
-// делаем кликабельным
 usernameEl.style.cursor = "pointer";
 
 usernameEl.onclick = function(event) {
@@ -173,7 +180,7 @@ usernameEl.onclick = function(event) {
         `${result.likesCount} отметок "Нравится"`;
     };
 
-    const favoriteBtn = document.getElementById('postModalFavoriteBtn');
+const favoriteBtn = document.getElementById('postModalFavoriteBtn');
 const favoriteImg = favoriteBtn.querySelector('img');
 
 favoriteImg.src = post.isFavorited
@@ -203,8 +210,11 @@ sendBtn.onclick = async () => {
   const token = localStorage.getItem("token");
 
   try {
-    await createComment(postId, text, token);
+    await createComment(postId, text, token, replyingToCommentId);
+
+    replyingToCommentId = null;
     input.value = "";
+
     await loadComments(postId);
   } catch (e) {
     console.error("Ошибка комментария", e);
@@ -249,7 +259,7 @@ sendBtn.onclick = async () => {
     await loadComments(postId);
 
   } catch (error) {
-    console.error('❌ Ошибка открытия поста:', error);
+    console.error('Ошибка открытия поста:', error);
   }
 }
 
@@ -1301,8 +1311,7 @@ function switchToSection(sectionId) {
 
     contentArea.innerHTML = `
       <div class="section-placeholder">
-        ✨ Раздел в разработке ✨<br>
-        🎀 Скоро здесь появится что-то интересное! 🎀
+        Раздел в разработке<br>
       </div>
     `;
   }
@@ -1471,6 +1480,25 @@ settingsBtn?.addEventListener("click", async () => {
       <span class="slider"></span>
     </label>
   </div>
+
+  <div class="notification-setting-item">
+    <span>Лайки комментариев</span>
+
+    <label class="switch">
+      <input type="checkbox" id="notifyCommentLikes">
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <div class="notification-setting-item">
+    <span>Ответы на комментарии</span>
+
+    <label class="switch">
+      <input type="checkbox" id="notifyCommentReplies">
+      <span class="slider"></span>
+    </label>
+  </div>
+
 </div>
 <div class="settings-card notification-settings-card">
   <div class="settings-card-header">
@@ -1578,6 +1606,12 @@ if (notificationSettings) {
 
   document.getElementById("notifyReviews").checked =
     notificationSettings.notifyReviews;
+
+  document.getElementById("notifyCommentLikes").checked =
+    notificationSettings.notifyCommentLikes;
+
+  document.getElementById("notifyCommentReplies").checked =
+    notificationSettings.notifyCommentReplies;
 }
 
 async function saveNotificationSettings() {
@@ -1592,7 +1626,13 @@ async function saveNotificationSettings() {
       document.getElementById("notifyComments").checked,
 
     notifyReviews:
-      document.getElementById("notifyReviews").checked
+      document.getElementById("notifyReviews").checked,
+
+    notifyCommentLikes:
+      document.getElementById("notifyCommentLikes").checked,
+
+    notifyCommentReplies:
+      document.getElementById("notifyCommentReplies").checked
   });
 }
 
@@ -1877,40 +1917,126 @@ ${
 async function loadComments(postId) {
   try {
     const comments = await getComments(postId);
-    const container = document.getElementById('postModalComments');
+    const container = document.getElementById("postModalComments");
     const myId = localStorage.getItem("userId");
+
+    if (!container) return;
 
     if (!comments || comments.length === 0) {
       container.innerHTML = `<div style="color:#FF98C1;">Комментариев пока нет</div>`;
       return;
     }
 
-    container.innerHTML = comments.map(c => `
-      <div class="comment-item">
-        <span class="comment-username comment-link"
-              onclick="openUserProfile('${c.author.id}')">
-          ${c.author?.username || 'Пользователь'}
-        </span>
+    container.innerHTML = comments.map(comment => `
+      <div class="comment-thread">
 
-        <span class="comment-text">${c.text}</span>
+        ${renderComment(comment, postId, myId, false)}
 
         ${
-          String(c.author?.id) === String(myId)
+          comment.replies && comment.replies.length > 0
             ? `
-              <button class="comment-delete-btn"
-                      onclick="deleteMyComment(event, '${c.id}', '${postId}')">
-                <img src="/icons/trash.svg" alt="Удалить">
-              </button>
+              <div class="comment-replies">
+                ${comment.replies.slice(0, 2).map(reply =>
+                  renderComment(reply, postId, myId, true)
+                ).join("")}
+              </div>
+
+              ${
+                comment.replies.length > 2
+                  ? `
+                    <button class="comment-toggle-btn" onclick="toggleReplies('${comment.id}')">
+                      Показать все ответы (${comment.replies.length})
+                    </button>
+
+                    <div class="comment-replies hidden" id="replies-${comment.id}">
+                      ${comment.replies.slice(2).map(reply =>
+                        renderComment(reply, postId, myId, true)
+                      ).join("")}
+                    </div>
+                  `
+                  : ""
+              }
             `
             : ""
         }
+
       </div>
-    `).join('');
+    `).join("");
 
   } catch (e) {
     console.error("Ошибка загрузки комментариев", e);
   }
 }
+
+function renderComment(comment, postId, myId, isReply) {
+return `
+  <div
+    class="comment-item ${isReply ? "comment-reply-item" : ""}"
+    onclick="replyToComment('${comment.id}', '${comment.author?.username || ""}')"
+  >
+    <div class="comment-main">
+      <span
+        class="comment-username comment-link"
+        onclick="event.stopPropagation(); openUserProfile('${comment.author?.id}')"
+      >
+        ${comment.author?.username || "Пользователь"}
+      </span>
+
+      <span class="comment-text">${comment.text}</span>
+    </div>
+
+    <div class="comment-actions">
+      <button
+        class="comment-like-btn"
+        id="commentLikeBtn-${comment.id}"
+        onclick="likeComment(event, '${comment.id}')"
+      >
+        <img src="${comment.isLikedByCurrentUser ? '/icons/heart-filled.svg' : '/icons/heart.svg'}">
+        <span id="commentLikesCount-${comment.id}">
+          ${comment.likesCount ?? 0}
+        </span>
+      </button>
+
+      ${
+        String(comment.author?.id) === String(myId) ||
+        String(currentOpenedPostAuthorId) === String(myId)
+          ? `
+            <button
+              class="comment-delete-btn"
+              onclick="deleteMyComment(event, '${comment.id}', '${postId}')"
+            >
+              <img src="/icons/trash.svg" alt="Удалить">
+            </button>
+          `
+          : ""
+      }
+    </div>
+  </div>
+`;
+}
+
+window.replyToComment = function(commentId, username) {
+  replyingToCommentId = commentId;
+
+  const input = document.getElementById("postModalCommentInput");
+
+  if (!input) {
+    console.log("postModalCommentInput не найден");
+    return;
+  }
+
+  input.value = `@${username} `;
+  input.focus();
+  input.setSelectionRange(input.value.length, input.value.length);
+};
+
+window.toggleReplies = function(commentId) {
+  const block = document.getElementById(`replies-${commentId}`);
+  if (!block) return;
+
+  block.classList.toggle("hidden");
+};
+
 
 window.showOtherUserTab = async function(tab, event) {
   const oldContainer = document.getElementById("otherUserProfileGrid");
@@ -2361,50 +2487,135 @@ window.openFeedComments = async function(event, postId) {
 };
 
 async function loadFeedComments(postId) {
-  const comments = await getComments(postId);
-  const list = document.getElementById(`feedCommentsList-${postId}`);
-  const myId = localStorage.getItem("userId");
+  try {
+    const comments = await getComments(postId);
+    const container = document.getElementById(`feedCommentsList-${postId}`);
+    const myId = localStorage.getItem("userId");
 
-  if (!list) return;
+    if (!container) return;
 
-  if (!comments || comments.length === 0) {
-    list.innerHTML = `<div class="feed-empty-comments">Комментариев пока нет</div>`;
-    return;
+    if (!comments || comments.length === 0) {
+      container.innerHTML = `<div style="color:#FF98C1;">Комментариев пока нет</div>`;
+      return;
+    }
+
+    container.innerHTML = comments.map(comment => `
+      <div class="comment-thread">
+        ${renderFeedComment(comment, postId, myId, false)}
+
+        ${
+          comment.replies && comment.replies.length > 0
+            ? `
+              <div class="comment-replies">
+                ${comment.replies.slice(0, 2).map(reply =>
+                  renderFeedComment(reply, postId, myId, true)
+                ).join("")}
+              </div>
+
+              ${
+                comment.replies.length > 2
+                  ? `
+                    <button class="comment-toggle-btn" onclick="toggleReplies('${comment.id}')">
+                      Показать все ответы (${comment.replies.length})
+                    </button>
+
+                    <div class="comment-replies hidden" id="replies-${comment.id}">
+                      ${comment.replies.slice(2).map(reply =>
+                        renderComment(reply, postId, myId, true)
+                      ).join("")}
+                    </div>
+                  `
+                  : ""
+              }
+            `
+            : ""
+        }
+      </div>
+    `).join("");
+
+  } catch (e) {
+    console.error("Ошибка загрузки комментариев в ленте", e);
   }
+}
 
-  list.innerHTML = comments.map(c => `
-    <div class="feed-comment">
-      <span onclick="openUserProfile('${c.author.id}')">
-        ${c.author?.username || 'Пользователь'}
-      </span>
+function renderFeedComment(comment, postId, myId, isReply) {
+  return `
+    <div
+      class="comment-item ${isReply ? "comment-reply-item" : ""}"
+      onclick="replyToFeedComment('${postId}', '${comment.id}', '${comment.author?.username || ""}')"
+    >
+      <div class="comment-main">
+        <span
+          class="comment-username comment-link"
+          onclick="event.stopPropagation(); openUserProfile('${comment.author?.id}')"
+        >
+          ${comment.author?.username || "Пользователь"}
+        </span>
 
-      <span class="feed-comment-text">${c.text}</span>
+        <span class="comment-text">${comment.text}</span>
+      </div>
 
-      ${
-        String(c.author?.id) === String(myId)
-          ? `
-            <button class="feed-comment-delete-btn"
-                    onclick="deleteMyFeedComment(event, '${c.id}', '${postId}')">
-              <img src="/icons/trash.svg" alt="Удалить">
-            </button>
-          `
-          : ""
-      }
+      <div class="comment-actions">
+        <button
+          class="comment-like-btn"
+          id="commentLikeBtn-${comment.id}"
+          onclick="likeComment(event, '${comment.id}')"
+        >
+          <img
+            src="${comment.isLikedByCurrentUser ? '/icons/heart-filled.svg' : '/icons/heart.svg'}"
+            alt="Лайк"
+          >
+
+          <span id="commentLikesCount-${comment.id}">
+            ${comment.likesCount ?? 0}
+          </span>
+        </button>
+
+        ${
+          String(comment.author?.id) === String(myId)
+            ? `
+              <button
+                class="comment-delete-btn"
+                onclick="deleteMyFeedComment(event, '${comment.id}', '${postId}')"
+              >
+                <img src="/icons/trash.svg" alt="Удалить">
+              </button>
+            `
+            : ""
+        }
+      </div>
     </div>
-  `).join("");
+  `;
 }
 
 window.sendFeedComment = async function(postId) {
-  const input = document.getElementById(`feedCommentInput-${postId}`);
-  const text = input.value.trim();
+const input = document.getElementById(`feedCommentInput-${postId}`);
+const text = input.value.trim();
 
   if (!text) return;
 
   const token = localStorage.getItem("token");
-  await createComment(postId, text, token);
+await createComment(postId, text, token, replyingToCommentId);
 
-  input.value = "";
-  await loadFeedComments(postId);
+replyingToCommentId = null;
+input.value = "";
+
+await loadFeedComments(postId);
+};
+
+window.replyToFeedComment = function(postId, commentId, username) {
+  replyingToCommentId = commentId;
+
+  const input = document.getElementById(`feedCommentInput-${postId}`);
+
+  if (!input) {
+    console.log("Инпут комментария ленты не найден");
+    return;
+  }
+
+  input.value = `@${username} `;
+  input.focus();
+  input.setSelectionRange(input.value.length, input.value.length);
 };
 
 async function renderInterestingPosts() {
@@ -3422,12 +3633,36 @@ window.deleteMyComment = async function(event, commentId, postId) {
 
   if (!confirm("Удалить комментарий?")) return;
 
-  const token = localStorage.getItem("token");
-  const result = await deleteComment(commentId, token);
+  const result = await deleteComment(commentId);
 
   if (!result) return;
 
   await loadComments(postId);
+
+};
+
+window.likeComment = async function(event, commentId) {
+  event.stopPropagation();
+
+  const result = await toggleCommentLike(commentId);
+  if (!result) return;
+
+  const btn = document.getElementById(`commentLikeBtn-${commentId}`);
+  const count = document.getElementById(`commentLikesCount-${commentId}`);
+
+  if (!btn || !count) return;
+
+  const img = btn.querySelector("img");
+
+  img.src = result.isLiked
+    ? "/icons/heart-filled.svg"
+    : "/icons/heart.svg";
+
+  count.textContent = result.likesCount;
+
+  btn.classList.remove("liked-pop");
+  void btn.offsetWidth;
+  btn.classList.add("liked-pop");
 };
 
 window.deleteMyFeedComment = async function(event, commentId, postId) {
@@ -4325,6 +4560,150 @@ window.closeMyUserRequestsModal = function() {
   modal.classList.add("hidden");
   modal.classList.remove("show");
 };
+
+function renderCommentThread(comment, postId) {
+  const replies = comment.replies || [];
+  const visibleReplies = replies.slice(0, 2);
+  const hiddenReplies = replies.slice(2);
+
+  return `
+    <div class="comment-thread" id="commentThread-${comment.id}">
+
+      ${renderCommentItem(comment, postId, false)}
+
+      ${
+        replies.length > 0
+          ? `
+            <div class="comment-replies" id="commentReplies-${comment.id}">
+              ${visibleReplies.map(reply => renderCommentItem(reply, postId, true)).join("")}
+            </div>
+          `
+          : ""
+      }
+
+      ${
+        hiddenReplies.length > 0
+          ? `
+            <button
+              class="comment-toggle-replies-btn"
+              id="toggleRepliesBtn-${comment.id}"
+              onclick="toggleCommentReplies('${comment.id}')"
+            >
+              Показать все ответы (${replies.length})
+            </button>
+
+            <div class="comment-hidden-replies hidden" id="hiddenReplies-${comment.id}">
+              ${hiddenReplies.map(reply => renderCommentItem(reply, postId, true)).join("")}
+            </div>
+          `
+          : ""
+      }
+
+    </div>
+  `;
+}
+
+function renderCommentItem(comment, postId, isReply) {
+  const avatar = comment.author?.avatarUrl
+    ? `https://localhost:7145${comment.author.avatarUrl}`
+    : "/icons/blank_pfp.jpg";
+
+  return `
+    <div
+      class="comment-item ${isReply ? "comment-reply-item" : ""}"
+      data-comment-id="${comment.id}"
+      data-username="${comment.author?.username || ""}"
+    >
+      <img src="${avatar}" class="comment-avatar">
+
+      <div class="comment-body">
+        <div class="comment-top">
+          <span
+            class="comment-author"
+            data-user-id="${comment.author?.id}"
+          >
+            ${comment.author?.username || "Пользователь"}
+          </span>
+
+          <span class="comment-date">
+            ${formatCommentDate(comment.createdAt)}
+          </span>
+        </div>
+
+        <div class="comment-text">
+          ${formatMentions(comment.text)}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+window.toggleCommentReplies = function(commentId) {
+  const hiddenReplies = document.getElementById(`hiddenReplies-${commentId}`);
+  const btn = document.getElementById(`toggleRepliesBtn-${commentId}`);
+
+  if (!hiddenReplies || !btn) return;
+
+  const isHidden = hiddenReplies.classList.contains("hidden");
+
+  if (isHidden) {
+    hiddenReplies.classList.remove("hidden");
+    btn.textContent = "Скрыть ответы";
+  } else {
+    hiddenReplies.classList.add("hidden");
+    btn.textContent = "Показать все ответы";
+  }
+};
+
+
+function formatMentions(text) {
+  if (!text) return "";
+
+  return text.replace(
+    /@([a-zA-Z0-9_а-яА-ЯёЁ]+)/g,
+    `<span class="comment-mention">@$1</span>`
+  );
+}
+
+function formatCommentDate(dateString) {
+  if (!dateString) return "";
+
+  return new Date(dateString).toLocaleDateString("ru-RU");
+}
+
+
+function setupCommentReplyClicks() {
+  document.querySelectorAll(".comment-item").forEach(item => {
+    item.onclick = function(event) {
+      const authorClick = event.target.closest(".comment-author");
+
+      if (authorClick) {
+        event.stopPropagation();
+
+        const userId = authorClick.dataset.userId;
+        if (userId) openUserProfile(userId);
+
+        return;
+      }
+
+      const commentId = item.dataset.commentId;
+      const username = item.dataset.username;
+
+      replyingToCommentId = commentId;
+
+      const input = document.getElementById("postModalCommentInput");
+
+      if (!input) {
+        console.log("postModalCommentInput не найден");
+        return;
+      }
+
+      input.value = `@${username} `;
+      input.focus();
+      input.setSelectionRange(input.value.length, input.value.length);
+    };
+  });
+}
 // ===== Инициализация =====
 initTheme();
 updateNotificationsBadge();

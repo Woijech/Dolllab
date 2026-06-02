@@ -123,7 +123,9 @@ namespace Dollab_Backend.Controllers
                 notifyLikes = user.NotifyLikes,
                 notifyFollowers = user.NotifyFollowers,
                 notifyComments = user.NotifyComments,
-                notifyReviews = user.NotifyReviews
+                notifyReviews = user.NotifyReviews,
+                notifyCommentLikes = user.NotifyCommentLikes,
+                notifyCommentReplies = user.NotifyCommentReplies
             });
         }
 
@@ -142,6 +144,8 @@ namespace Dollab_Backend.Controllers
             user.NotifyFollowers = dto.NotifyFollowers;
             user.NotifyComments = dto.NotifyComments;
             user.NotifyReviews = dto.NotifyReviews;
+            user.NotifyCommentLikes = dto.NotifyCommentLikes;
+            user.NotifyCommentReplies = dto.NotifyCommentReplies;
 
             await _context.SaveChangesAsync();
 

@@ -67,6 +67,7 @@ namespace Dollab_Backend.Controllers
                 .Include(p => p.User)
                 .Include(p => p.Category)
                 .Include(p => p.Images)
+                .Where(p => p.Id == id)
                 .Select(p => new
                 {
                     p.Id,
@@ -74,6 +75,7 @@ namespace Dollab_Backend.Controllers
                     p.Description,
                     p.Price,
                     p.CreatedAt,
+
                     p.IsHidden,
                     p.HiddenReason,
                     p.HiddenAt,
@@ -81,7 +83,8 @@ namespace Dollab_Backend.Controllers
                     User = new
                     {
                         p.User.Id,
-                        p.User.Username
+                        p.User.Username,
+                        AvatarUrl = p.User.AvatarUrl ?? ""
                     },
 
                     Category = new
@@ -94,9 +97,11 @@ namespace Dollab_Backend.Controllers
                     {
                         i.Id,
                         i.ImageUrl
-                    })
+                    }).ToList(),
+
+                    ReportsCount = _context.Reports.Count(r => r.ReportedProductAdId == p.Id)
                 })
-                .FirstOrDefaultAsync(p => p.Id == id);
+                .FirstOrDefaultAsync();
 
             if (ad == null)
                 return NotFound("Объявление не найдено");
