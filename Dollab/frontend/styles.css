@@ -1643,6 +1643,7 @@ body,
   overflow: visible;
 }
 
+
 .feed-post-header {
   display: flex;
   align-items: center;
@@ -1673,6 +1674,9 @@ text-decoration:underline;
   display: block;
   object-fit: contain;
   background: #FFE4F0;
+}
+body.dark-theme.feed-post-image {
+  background: #29213E !important;
 }
 
 .feed-post-actions {
@@ -6347,4 +6351,303 @@ button,
     position: absolute;
     inset: 0;
   }
+}
+
+.image-drop-zone {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+
+  background: rgba(255, 103, 166, 0.05);
+
+  border: 2px dashed rgba(255, 103, 166, 0.35);
+  border-radius: 16px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+
+  margin-bottom: 12px;
+
+  overflow: hidden;
+
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.image-drop-zone.drag-over {
+  transform: scale(1.02);
+  background: rgba(255, 103, 166, 0.1);
+  border-color: #FF67A6;
+}
+
+#uploadPlaceholder {
+  text-align: center;
+  color: #FF67A6;
+}
+
+#uploadPlaceholder img {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 12px;
+  opacity: 0.6;
+}
+
+.drop-zone-title {
+  font-size: 18px;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.drop-zone-subtitle {
+  font-size: 13px;
+  color: #FF98C1;
+}
+
+.post-preview-image {
+  display: none;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.product-preview-item {
+  width: 100px;
+  height: 100px;
+
+  border-radius: 16px;
+  overflow: hidden;
+
+  flex-shrink: 0;
+}
+
+.product-preview-item img {
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+}
+
+.product-images-box {
+  display: flex;
+  gap: 12px;
+
+  overflow-x: auto;
+}
+
+.product-images-box.drag-over {
+  border-color: #FF67A6;
+  background: rgba(255, 103, 166, 0.08);
+}
+
+.toast-container {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  z-index: 9999;
+}
+
+.custom-toast {
+  min-width: 260px;
+  max-width: 360px;
+
+  padding: 14px 18px;
+
+  border-radius: 18px;
+
+  background: #FFF0F7;
+  color: #FF67A6;
+
+  font-weight: 800;
+
+  box-shadow: 0 12px 32px rgba(255, 103, 166, 0.2);
+
+  animation: toastIn 0.25s ease;
+}
+
+.custom-toast.error {
+  background: #FFF0F3;
+  color: #FF4B6E;
+}
+
+.custom-toast.warning {
+  background: #FFF7E8;
+  color: #D9961F;
+}
+
+.custom-toast.hide {
+  animation: toastOut 0.25s ease forwards;
+}
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes toastOut {
+  to {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+}
+
+body.dark-theme .custom-toast {
+  background: #271F38;
+  color: #FEB6E7;
+  box-shadow: 0 12px 32px rgba(254, 182, 231, 0.12);
+}
+
+.confirm-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  animation: confirmFadeIn 0.2s ease;
+}
+
+.confirm-overlay {
+  position: absolute;
+  inset: 0;
+
+  background: rgba(255, 182, 213, 0.28);
+  backdrop-filter: blur(4px);
+}
+
+.confirm-box {
+  position: relative;
+  z-index: 2;
+
+  width: min(420px, calc(100% - 32px));
+
+  background: #fff;
+  border-radius: 28px;
+
+  padding: 28px;
+
+  box-shadow:
+    0 20px 55px rgba(255, 103, 166, 0.22),
+    0 0 0 1px rgba(255, 103, 166, 0.12);
+
+  text-align: center;
+
+  animation: confirmPop 0.22s ease;
+}
+
+.confirm-box h2 {
+  color: #FF67A6;
+  margin-bottom: 12px;
+}
+
+.confirm-box p {
+  color: #FF98C1;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+
+  margin-top: 24px;
+}
+
+.confirm-actions button {
+  border: none;
+  border-radius: 999px;
+
+  padding: 11px 22px;
+
+  font-weight: 900;
+  cursor: pointer;
+
+  transition: transform 0.18s ease;
+}
+
+.confirm-actions button:hover {
+  transform: scale(1.04);
+}
+
+.confirm-actions button:active {
+  transform: scale(0.94);
+}
+
+.confirm-cancel {
+  background: #FFF0F7;
+  color: #FF67A6;
+}
+
+.confirm-ok {
+  background: #FF67A6;
+  color: white;
+}
+
+.confirm-ok.danger {
+  background: #FF4B6E;
+}
+
+.confirm-modal.hide {
+  animation: confirmFadeOut 0.2s ease forwards;
+}
+
+@keyframes confirmFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes confirmFadeOut {
+  to { opacity: 0; }
+}
+
+@keyframes confirmPop {
+  from {
+    transform: scale(0.94) translateY(8px);
+  }
+
+  to {
+    transform: scale(1) translateY(0);
+  }
+}
+
+body.dark-theme .confirm-overlay {
+  background: rgba(20, 14, 31, 0.58);
+}
+
+body.dark-theme .confirm-box {
+  background: #271F38;
+  box-shadow:
+    0 20px 55px rgba(254, 182, 231, 0.14),
+    0 0 0 1px rgba(254, 182, 231, 0.14);
+}
+
+body.dark-theme .confirm-box h2,
+body.dark-theme .confirm-cancel {
+  color: #FEB6E7;
+}
+
+body.dark-theme .confirm-box p {
+  color: #CFC3EA;
+}
+
+body.dark-theme .confirm-cancel {
+  background: rgba(153, 130, 210, 0.16);
 }

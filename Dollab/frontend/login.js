@@ -86,12 +86,12 @@ if (!response.ok) {
   try {
     errorData = await response.json();
   } catch {
-    alert("Ошибка входа");
+    showToast("Ошибка входа");
     return;
   }
 
   if (errorData.message === "Ваш аккаунт заблокирован") {
-    alert(
+    showToast(
       `Ваш аккаунт заблокирован.\n\nПричина: ${
         errorData.reason || "Не указана"
       }`
@@ -105,7 +105,7 @@ if (!response.ok) {
       ? new Date(errorData.blockedUntil).toLocaleString("ru-RU")
       : "неизвестно";
 
-    alert(
+    showToast(
       `Ваш аккаунт временно заблокирован.\n\nДо: ${blockedUntil}\n\nПричина: ${
         errorData.reason || "Не указана"
       }`
@@ -114,7 +114,7 @@ if (!response.ok) {
     return;
   }
 
-  alert(
+  showToast(
     typeof errorData === "string"
       ? errorData
       : errorData.message || "Неверный логин или пароль"
@@ -133,7 +133,7 @@ if (!response.ok) {
   if (data.role === "Admin") {
     window.location.href = "adminpage.html";
   } else {
-    window.location.href = "newmainpage1.html";
+    window.location.href = "mainpage.html";
   }
 }
 
@@ -158,15 +158,45 @@ async function register() {
     const text = await response.text();
 
     if (!response.ok) {
-      alert("Error: " + text);
+      showToast(text || "Ошибка регистрации", "error");
       return;
     }
 
-    alert("Registration successful!");
+    showToast("Регистрация успешно завершена!");
+
+    setTimeout(() => {
+      document.getElementById("container").classList.remove("active");
+    }, 1500);
+
   } catch (error) {
     console.error(error);
-    alert("Server error");
+    showToast("Ошибка сервера", "error");
   }
+}
+
+function showToast(message, type = "success") {
+  let container = document.getElementById("toastContainer");
+
+  if (!container) {
+    document.body.insertAdjacentHTML(
+      "beforeend",
+      `<div id="toastContainer" class="toast-container"></div>`
+    );
+
+    container = document.getElementById("toastContainer");
+  }
+
+  const toast = document.createElement("div");
+  toast.className = `custom-toast ${type}`;
+  toast.textContent = message;
+
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.classList.add("hide");
+
+    setTimeout(() => toast.remove(), 300);
+  }, 2500);
 }
 
 // Инициализация при загрузке страницы
@@ -176,6 +206,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Экспортируем функции для использования в HTML
 window.login = login;
-window.signup = signup;
+window.register = register;
 window.forgotPassword = forgotPassword;
 window.togglePasswordVisibility = togglePasswordVisibility;

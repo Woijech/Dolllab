@@ -163,7 +163,8 @@ public class PostController : ControllerBase
     {
         var userId = User.GetUserId();
 
-        var post = await _context.Posts.FirstOrDefaultAsync(p => p.Id == id);
+        var post = await _context.Posts
+            .FirstOrDefaultAsync(p => p.Id == id);
 
         if (post == null)
             return NotFound();
@@ -171,7 +172,37 @@ public class PostController : ControllerBase
         if (post.UserId != userId)
             return Forbid();
 
+        var commentIds = await _context.Comments
+            .Where(c => c.PostId == id)
+            .Select(c => c.Id)
+            .ToListAsync();
+
+        var commentLikes = await _context.CommentLikes
+            .Where(l => commentIds.Contains(l.CommentId))
+            .ToListAsync();
+
+        _context.CommentLikes.RemoveRange(commentLikes);
+
+        var comments = await _context.Comments
+            .Where(c => c.PostId == id)
+            .ToListAsync();
+
+        _context.Comments.RemoveRange(comments);
+
+        var postLikes = await _context.Likes
+            .Where(l => l.PostId == id)
+            .ToListAsync();
+
+        _context.Likes.RemoveRange(postLikes);
+
+        var favorites = await _context.Favorites
+            .Where(f => f.PostId == id)
+            .ToListAsync();
+
+        _context.Favorites.RemoveRange(favorites);
+
         _context.Posts.Remove(post);
+
         await _context.SaveChangesAsync();
 
         return Ok(new { message = "Post deleted" });
@@ -561,8 +592,11 @@ public class PostController : ControllerBase
         });
     }
 
-    private async Task<List<User>> GetMentionedUsersAsync(string text)
+    private async Task<List<User>> GetMentionedUsersAsync(string? text)
     {
+        if (string.IsNullOrWhiteSpace(text))
+            return new List<User>();
+
         var matches = System.Text.RegularExpressions.Regex.Matches(
             text,
             @"@([a-zA-Z0-9_а-яА-ЯёЁ]+)"

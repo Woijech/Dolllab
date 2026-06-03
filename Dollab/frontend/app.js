@@ -383,16 +383,28 @@ window.deletePostFromCard = async function(postId) {
     menu.style.display = 'none';
   });
   
-  if (confirm('Вы уверены, что хотите удалить этот пост?')) {
-    const token = localStorage.getItem("token");
-    const result = await deletePost(token, postId);
-    if (result) {
-      console.log('Пост удален');
-      await renderProfile();
-    } else {
-      alert('Ошибка при удалении поста');
-    }
+const ok = await showConfirm(
+  "Вы уверены, что хотите удалить этот пост?",
+  {
+    title: "Удаление поста",
+    confirmText: "Удалить",
+    cancelText: "Отмена",
+    danger: true
   }
+);
+
+if (!ok) return;
+
+const token = localStorage.getItem("token");
+
+const result = await deletePost(token, postId);
+
+if (result) {
+  showToast("Пост удалён");
+  await renderProfile();
+} else {
+  showToast("Ошибка при удалении поста", "error");
+}
 };
 
 document.addEventListener('click', (e) => {
@@ -519,11 +531,11 @@ function setupEditPostModal(postId, post) {
           await renderProfile();
         }
       } else {
-        alert('Ошибка при обновлении поста');
+        showToast('Ошибка при обновлении поста');
       }
     } catch (error) {
       console.error('Ошибка:', error);
-      alert('Ошибка при обновлении поста');
+      showToast('Ошибка при обновлении поста');
     } finally {
       saveBtn.disabled = false;
       saveBtn.textContent = 'Сохранить';
@@ -548,17 +560,20 @@ function renderCreatePostPage() {
             <h2 style="color: #FF67A6; margin-bottom: 24px; text-align: center;">Создать новый пост</h2>
             
             <div style="margin-bottom: 20px; text-align: center;">
-              <div id="imagePreviewContainer" style="width: 100%; aspect-ratio: 1/1; background: rgba(255, 103, 166, 0.05); border: 2px dashed rgba(255, 103, 166, 0.3); border-radius: 16px; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-bottom: 12px; overflow: hidden;">
-                <div id="uploadPlaceholder" style="text-align: center; color: #FF67A6;">
-                  <img src="/icons/camera-fill.svg" alt="Фото" style="width: 48px; height: 48px; margin-bottom: 12px; opacity: 0.6;">
-                  <div style="font-size: 18px; margin-bottom: 8px;">Выберите фото</div>
-                  <label for="postImageInput" class="file-upload-btn" onclick="event.stopPropagation();">
-                    Выбрать файл
-                  </label>
+              <div
+                  id="imagePreviewContainer"
+                  class="image-drop-zone post-drop-zone"
+                >
+                  <div id="uploadPlaceholder">
+                    <img src="/icons/camera-fill.svg" alt="Фото">
+                    <div class="drop-zone-title">Перетащите фото сюда</div>
+                    <div class="drop-zone-subtitle">или нажмите, чтобы выбрать файл</div>
+                  </div>
+
+                  <img id="previewImage" class="post-preview-image" alt="Предпросмотр">
                 </div>
-                <img id="previewImage" style="display: none; width: 100%; height: 100%; object-fit: cover;" alt="Предпросмотр">
-              </div>
-              <input type="file" id="postImageInput" accept="image/*" style="display: none;">
+
+                <input type="file" id="postImageInput" accept="image/*" style="display: none;">
             </div>
             
             <div style="margin-bottom: 20px;">
@@ -576,6 +591,7 @@ function renderCreatePostPage() {
     `;
     document.body.insertAdjacentHTML('beforeend', createPostModalHTML);
   }
+setupPostImageDropZone();
 
   const modal = document.getElementById('createPostModal');
   modal.classList.add('show');
@@ -627,7 +643,7 @@ function renderCreatePostPage() {
       const imageFile = postImageInput ? postImageInput.files[0] : null;
       
       if (!imageFile) {
-        alert('Пожалуйста, выберите изображение');
+        showToast('Пожалуйста, выберите изображение');
         return;
       }
 
@@ -651,14 +667,14 @@ function renderCreatePostPage() {
         console.log('Результат createPost:', result);
         
         if (result) {
-          alert('Пост успешно создан!');
+          showToast('Пост успешно создан!');
           closeModal();
         } else {
-          alert('Ошибка при создании поста. Проверьте консоль.');
+          showToast('Ошибка при создании поста. Проверьте консоль.');
         }
       } catch (error) {
         console.error('Ошибка при создании поста:', error);
-        alert('Ошибка: ' + error.message);
+        showToast('Ошибка: ' + error.message);
       } finally {
         if (saveBtn) {
           saveBtn.disabled = false;
@@ -1129,7 +1145,7 @@ ${
   } else {
     profileGrid.innerHTML = `
       <div class="section-placeholder" style="grid-column:1/-1;">
-        🎀 В избранном пока нет публикаций
+         В избранном пока нет публикаций
       </div>
     `;
   }
@@ -1244,7 +1260,7 @@ const editContactMethod = document.getElementById("editProfileContactMethod");
       closeEditModal();
       await renderProfile();
     } else {
-      alert('Ошибка при сохранении профиля');
+      showToast('Ошибка при сохранении профиля');
     }
   }
 
@@ -1386,7 +1402,10 @@ function switchToSection(sectionId, updateURL = true) {
       searchInput.value = shopFilters.search || urlState.search || "";
       searchInput.placeholder = "Поиск товаров";
       searchInput.oninput = async () => {
-        shopFilters.search = searchInput.value;
+        const query = searchInput.value.trim();
+
+        shopFilters.search = query;
+
         updateURLForSection("cart");
         await renderShopPage();
       };
@@ -1443,12 +1462,19 @@ userSearchInput?.addEventListener("input", async () => {
   }
 });
 
-userClearIcon?.addEventListener("click", async () => {
-  userSearchInput.value = "";
-  renderInterestingPosts();
+clearIcon?.addEventListener("click", async () => {
+  searchInput.value = "";
 
-  if (currentSection === "interesting") {
-    await renderUserSearchResults("");
+  if (currentSection === "cyclopedia") {
+    loadDolls();
+    return;
+  }
+
+  if (currentSection === "cart") {
+    shopFilters.search = "";
+    updateURLForSection("cart");
+    await renderShopPage();
+    return;
   }
 });
 
@@ -2930,18 +2956,28 @@ function renderCreateProductAdModal() {
           <div style="width: 100%;">
             <h2 class="create-product-title">Создать объявление</h2>
 
-            <div class="product-images-box" id="productImagesBox">
-              <div class="product-upload-placeholder">
-                <img src="/icons/camera-fill.svg" alt="">
-                <div>Выберите фото товара</div>
+              <div class="product-images-box image-drop-zone" id="productImagesBox">
+
+                <div class="product-upload-placeholder" id="productUploadPlaceholder">
+                  <img src="/icons/camera-fill.svg" alt="">
+                  <div class="drop-zone-title">
+                    Перетащите фото товара сюда
+                  </div>
+
+                  <div class="drop-zone-subtitle">
+                    или нажмите для выбора
+                  </div>
+                </div>
+
               </div>
-            </div>
 
-            <input type="file" id="productImagesInput" accept="image/*" multiple style="display:none;">
-
-            <label for="productImagesInput" class="file-upload-btn">
-              Выбрать фото
-            </label>
+              <input
+                type="file"
+                id="productImagesInput"
+                accept="image/*"
+                multiple
+                style="display:none;"
+              >
 
             <input id="productTitleInput" class="product-input" placeholder="Название товара">
 
@@ -2964,6 +3000,7 @@ function renderCreateProductAdModal() {
 
     document.body.insertAdjacentHTML("beforeend", modalHTML);
   }
+  setupProductImageDropZone();
 
   const modal = document.getElementById("createProductAdModal");
   const closeBtn = document.getElementById("createProductClose");
@@ -3011,12 +3048,12 @@ function renderCreateProductAdModal() {
     const images = Array.from(imagesInput.files);
 
     if (!title || !description || !price || !categoryId) {
-      alert("Заполните название, описание, цену и категорию");
+      showToast("Заполните название, описание, цену и категорию");
       return;
     }
 
     if (images.length === 0) {
-      alert("Добавьте хотя бы одно фото");
+      showToast("Добавьте хотя бы одно фото");
       return;
     }
 
@@ -3032,12 +3069,12 @@ function renderCreateProductAdModal() {
         images
       });
 
-      alert("Объявление создано!");
+      showToast("Объявление создано!");
       closeModal();
       switchToSection("cart");
 
     } catch (error) {
-      alert("Ошибка создания объявления: " + error.message);
+      showToast("Ошибка создания объявления: " + error.message);
     } finally {
       saveBtn.disabled = false;
       saveBtn.textContent = "Опубликовать";
@@ -3122,7 +3159,7 @@ async function openProductAdModal(adId) {
   const ad = await getProductAdById(adId);
 
   if (!ad) {
-    alert("Не удалось загрузить объявление");
+    showToast("Не удалось загрузить объявление");
     return;
   }
 
@@ -3369,13 +3406,19 @@ window.deleteProductAdFromProfile = async function(adId) {
     menu.classList.remove("show");
   });
 
-  if (!confirm("Удалить объявление?")) return;
+const ok = await showConfirm("Удалить объявление?", {
+  title: "Удаление",
+  confirmText: "Удалить",
+  cancelText: "Отмена",
+  danger: true
+});
 
+if (!ok) return;
   const token = localStorage.getItem("token");
   const result = await deleteProductAd(token, adId);
 
   if (!result) {
-    alert("Ошибка при удалении объявления");
+    showToast("Ошибка при удалении объявления");
     return;
   }
 
@@ -3390,7 +3433,7 @@ window.openEditProductAdModal = async function(adId) {
   const ad = await getProductAdById(adId);
 
   if (!ad) {
-    alert("Не удалось загрузить объявление");
+    showToast("Не удалось загрузить объявление");
     return;
   }
 
@@ -3456,7 +3499,7 @@ loadProductCategoriesToSelect(
     const categoryId = document.getElementById("editProductCategoryInput").value;
 
     if (!title || !description || !price || !categoryId) {
-      alert("Заполните все поля");
+      showToast("Заполните все поля");
       return;
     }
 
@@ -3468,7 +3511,7 @@ loadProductCategoriesToSelect(
     });
 
     if (!result) {
-      alert("Ошибка при обновлении объявления");
+      showToast("Ошибка при обновлении объявления");
       return;
     }
 
@@ -3589,8 +3632,14 @@ window.removeCartItem = async function(event, productAdId) {
 };
 
 window.clearMyCart = async function() {
-  if (!confirm("Очистить корзину?")) return;
+const ok = await showConfirm("Очистить корзину?", {
+  title: "Очистка",
+  confirmText: "Очистить",
+  cancelText: "Отмена",
+  danger: true
+});
 
+if (!ok) return;
   const token = localStorage.getItem("token");
   const result = await clearCart(token);
 
@@ -3706,8 +3755,14 @@ async function refreshCartState() {
 }
 
 window.removeReview = async function(reviewId, profileUserId) {
-  if (!confirm("Удалить отзыв?")) return;
+const ok = await showConfirm("Удалить отзыв?", {
+  title: "Удаление",
+  confirmText: "Удалить",
+  cancelText: "Отмена",
+  danger: true
+});
 
+if (!ok) return;
   const result = await deleteReview(reviewId);
 
   if (!result) return;
@@ -3722,8 +3777,14 @@ window.removeReview = async function(reviewId, profileUserId) {
 window.deleteMyComment = async function(event, commentId, postId) {
   event.stopPropagation();
 
-  if (!confirm("Удалить комментарий?")) return;
+const ok = await showConfirm("Удалить комментарий?", {
+  title: "Удаление",
+  confirmText: "Удалить",
+  cancelText: "Отмена",
+  danger: true
+});
 
+if (!ok) return;
   const result = await deleteComment(commentId);
 
   if (!result) return;
@@ -3759,8 +3820,14 @@ window.likeComment = async function(event, commentId) {
 window.deleteMyFeedComment = async function(event, commentId, postId) {
   event.stopPropagation();
 
-  if (!confirm("Удалить комментарий?")) return;
+const ok = await showConfirm("Удалить комментарий?", {
+  title: "Удаление",
+  confirmText: "Удалить",
+  cancelText: "Отмена",
+  danger: true
+});
 
+if (!ok) return;
   const token = localStorage.getItem("token");
   const result = await deleteComment(commentId, token);
 
@@ -4012,7 +4079,7 @@ window.saveNewPassword = async function() {
   const newPassword = document.getElementById("newPasswordInput").value.trim();
 
   if (!oldPassword || !newPassword) {
-    alert("Заполните оба поля");
+    showToast("Заполните оба поля");
     return;
   }
 
@@ -4020,7 +4087,7 @@ window.saveNewPassword = async function() {
 
   if (!result) return;
 
-  alert("Пароль изменён");
+  showToast("Пароль изменён");
   closeChangePasswordModal();
 };
 
@@ -4029,12 +4096,18 @@ window.logoutAccount = function() {
   localStorage.removeItem("userId");
   localStorage.removeItem("username");
 
-  window.location.href = "loginpage2.html";
+  window.location.href = "loginpage.html";
 };
 
 window.deleteMyAccount = async function() {
-  if (!confirm("Вы точно хотите удалить аккаунт? Это действие нельзя отменить.")) return;
+const ok = await showConfirm("Вы точно хотите удалить аккаунт? Это действие нельзя отменить", {
+  title: "Удаление",
+  confirmText: "Удалить",
+  cancelText: "Отмена",
+  danger: true
+});
 
+if (!ok) return;
   const result = await deleteAccount();
 
   if (!result) return;
@@ -4057,13 +4130,19 @@ document.addEventListener("click", (event) => {
 });
 
 window.blockUserFromProfile = async function(userId) {
-  if (!confirm("Заблокировать пользователя?")) return;
+const ok = await showConfirm("Заблокировать пользователя?", {
+  title: "Блокировка",
+  confirmText: "Заблокировать",
+  cancelText: "Отмена",
+  danger: true
+});
 
+if (!ok) return;
   const result = await blockUser(userId);
 
   if (!result) return;
 
-  alert("Пользователь добавлен в черный список");
+  showToast("Пользователь добавлен в черный список");
   switchToSection("home");
 };
 window.openBlacklistModal = async function() {
@@ -4187,7 +4266,7 @@ window.sendUserReport = async function() {
   const description = document.getElementById("reportUserDescription").value.trim();
 
   if (!reason) {
-    alert("Укажите причину жалобы");
+    showToast("Укажите причину жалобы");
     return;
   }
 
@@ -4195,7 +4274,7 @@ window.sendUserReport = async function() {
 
   if (!result) return;
 
-  alert("Жалоба отправлена");
+  showToast("Жалоба отправлена");
   closeReportUserModal();
 };
 
@@ -4389,7 +4468,7 @@ window.sendContentReport = async function() {
   const description = document.getElementById("reportContentDescription").value.trim();
 
   if (!reason) {
-    alert("Укажите причину жалобы");
+    showToast("Укажите причину жалобы");
     return;
   }
 
@@ -4399,7 +4478,7 @@ window.sendContentReport = async function() {
 
   if (!result) return;
 
-  alert("Жалоба отправлена");
+  showToast("Жалоба отправлена");
   closeReportContentModal();
 };
 
@@ -4474,7 +4553,7 @@ window.submitUserRequest = async function() {
       .trim();
 
   if (!description) {
-    alert("Введите описание");
+    showToast("Введите описание");
     return;
   }
 
@@ -4494,7 +4573,7 @@ window.submitUserRequest = async function() {
 
   if (!result) return;
 
-  alert("Заявка отправлена");
+  showToast("Заявка отправлена");
 
   closeUserRequestsModal();
 
@@ -4932,6 +5011,203 @@ document.addEventListener('click', (e) => {
     });
   }
 });
+
+function setupPostImageDropZone() {
+  const dropZone = document.getElementById("imagePreviewContainer");
+  const input = document.getElementById("postImageInput");
+  const preview = document.getElementById("previewImage");
+  const placeholder = document.getElementById("uploadPlaceholder");
+
+  if (!dropZone || !input || !preview || !placeholder) return;
+
+  dropZone.onclick = () => input.click();
+
+  dropZone.ondragover = (event) => {
+    event.preventDefault();
+    dropZone.classList.add("drag-over");
+  };
+
+  dropZone.ondragleave = () => {
+    dropZone.classList.remove("drag-over");
+  };
+
+  dropZone.ondrop = (event) => {
+    event.preventDefault();
+    dropZone.classList.remove("drag-over");
+
+    const file = [...event.dataTransfer.files].find(file =>
+      file.type.startsWith("image/")
+    );
+
+    if (!file) return;
+
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(file);
+    input.files = dataTransfer.files;
+
+    showPostImagePreview(file);
+  };
+
+  input.onchange = () => {
+    const file = input.files[0];
+    if (!file) return;
+
+    showPostImagePreview(file);
+  };
+}
+
+function showPostImagePreview(file) {
+  const preview = document.getElementById("previewImage");
+  const placeholder = document.getElementById("uploadPlaceholder");
+
+  const reader = new FileReader();
+
+  reader.onload = (event) => {
+    preview.src = event.target.result;
+    preview.style.display = "block";
+    placeholder.style.display = "none";
+  };
+
+  reader.readAsDataURL(file);
+}
+
+function setupProductImageDropZone() {
+  const dropZone = document.getElementById("productImagesBox");
+  const input = document.getElementById("productImagesInput");
+
+  if (!dropZone || !input) return;
+
+  dropZone.onclick = () => input.click();
+
+  dropZone.ondragover = (event) => {
+    event.preventDefault();
+    dropZone.classList.add("drag-over");
+  };
+
+  dropZone.ondragleave = () => {
+    dropZone.classList.remove("drag-over");
+  };
+
+  dropZone.ondrop = (event) => {
+    event.preventDefault();
+    dropZone.classList.remove("drag-over");
+
+    const files = [...event.dataTransfer.files]
+      .filter(file => file.type.startsWith("image/"));
+
+    if (files.length === 0) return;
+
+    const dataTransfer = new DataTransfer();
+
+    files.forEach(file => {
+      dataTransfer.items.add(file);
+    });
+
+    input.files = dataTransfer.files;
+
+    renderProductImagesPreview(files);
+  };
+
+  input.onchange = () => {
+    renderProductImagesPreview([...input.files]);
+  };
+}
+
+function renderProductImagesPreview(files) {
+  const box = document.getElementById("productImagesBox");
+
+  if (!box) return;
+
+  box.innerHTML = "";
+
+  files.forEach(file => {
+    const reader = new FileReader();
+
+    reader.onload = (event) => {
+      box.insertAdjacentHTML(
+        "beforeend",
+        `
+        <div class="product-preview-item">
+          <img src="${event.target.result}">
+        </div>
+        `
+      );
+    };
+
+    reader.readAsDataURL(file);
+  });
+}
+
+function showToast(message, type = "success") {
+  let container = document.getElementById("toastContainer");
+
+  if (!container) {
+    document.body.insertAdjacentHTML("beforeend", `
+      <div id="toastContainer" class="toast-container"></div>
+    `);
+
+    container = document.getElementById("toastContainer");
+  }
+
+  const toast = document.createElement("div");
+  toast.className = `custom-toast ${type}`;
+  toast.textContent = message;
+
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.classList.add("hide");
+
+    setTimeout(() => {
+      toast.remove();
+    }, 300);
+  }, 2500);
+}
+
+function showConfirm(message, options = {}) {
+  return new Promise(resolve => {
+    const {
+      title = "Подтверждение",
+      confirmText = "Да",
+      cancelText = "Отмена",
+      danger = false
+    } = options;
+
+    const modal = document.createElement("div");
+    modal.className = "confirm-modal";
+
+    modal.innerHTML = `
+      <div class="confirm-overlay"></div>
+
+      <div class="confirm-box">
+        <h2>${title}</h2>
+        <p>${message}</p>
+
+        <div class="confirm-actions">
+          <button class="confirm-cancel">${cancelText}</button>
+          <button class="confirm-ok ${danger ? "danger" : ""}">
+            ${confirmText}
+          </button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    const close = result => {
+      modal.classList.add("hide");
+
+      setTimeout(() => {
+        modal.remove();
+        resolve(result);
+      }, 200);
+    };
+
+    modal.querySelector(".confirm-cancel").onclick = () => close(false);
+    modal.querySelector(".confirm-overlay").onclick = () => close(false);
+    modal.querySelector(".confirm-ok").onclick = () => close(true);
+  });
+}
 
 initTheme();
 updateNotificationsBadge();

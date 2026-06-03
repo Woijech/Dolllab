@@ -1,7 +1,7 @@
 const role = localStorage.getItem("role");
 
 if (!role || role !== "Admin") {
-  window.location.href = "loginpage2.html";
+  window.location.href = "loginpage.html";
 }
 const adminContent = document.getElementById("adminContent");
 
@@ -177,7 +177,7 @@ formData.append("imageUrl", imagePathInput.value.trim());
   }
 
   if (!formData.get("name")) {
-    alert("Введите название куклы");
+    showToast("Введите название куклы");
     return;
   }
 
@@ -197,12 +197,18 @@ formData.append("imageUrl", imagePathInput.value.trim());
 
 window.removeAdminDoll = async function(id) {
   if (!id) {
-    alert("Id куклы не найден");
+    showToast("Id куклы не найден");
     return;
   }
 
-  if (!confirm("Удалить куклу?")) return;
+const ok = await showConfirm("Удалить куклу?", {
+  title: "Удаление",
+  confirmText: "Удалить",
+  cancelText: "Отмена",
+  danger: true
+});
 
+if (!ok) return;
   const result = await deleteAdminDoll(id);
 
   if (!result) return;
@@ -377,7 +383,7 @@ window.saveAdminCategory = async function() {
     .trim();
 
   if (!name) {
-    alert("Введите название");
+    showToast("Введите название");
     return;
   }
 
@@ -397,8 +403,14 @@ window.saveAdminCategory = async function() {
 };
 
 window.removeAdminCategory = async function(id) {
-  if (!confirm("Удалить категорию?")) return;
+const ok = await showConfirm("Удалить категорию?", {
+  title: "Удаление",
+  confirmText: "Удалить",
+  cancelText: "Отмена",
+  danger: true
+});
 
+if (!ok) return;
   const result = await deleteAdminCategory(id);
 
   if (!result) return;
@@ -561,7 +573,7 @@ window.saveBanUser = async function() {
   const reason = document.getElementById("banReasonInput").value.trim();
 
   if (!reason) {
-    alert("Введите причину");
+    showToast("Введите причину");
     return;
   }
 
@@ -635,12 +647,12 @@ window.saveBlockUser = async function() {
   const reason = document.getElementById("blockReasonInput").value.trim();
 
   if (!blockedUntil) {
-    alert("Укажите дату окончания блокировки");
+    showToast("Укажите дату окончания блокировки");
     return;
   }
 
   if (!reason) {
-    alert("Введите причину");
+    showToast("Введите причину");
     return;
   }
 
@@ -653,8 +665,14 @@ window.saveBlockUser = async function() {
 };
 
 window.unblockUserFromAdmin = async function(userId) {
-  if (!confirm("Разблокировать пользователя?")) return;
+const ok = await showConfirm("Разблокировать пользователя?", {
+  title: "Разблокировка",
+  confirmText: "Разблокировать",
+  cancelText: "Отмена",
+  danger: true
+});
 
+if (!ok) return;
   const result = await unblockAdminUser(userId);
 
   if (!result) return;
@@ -805,7 +823,7 @@ window.saveHidePost = async function() {
   const reason = document.getElementById("hidePostReasonInput").value.trim();
 
   if (!reason) {
-    alert("Введите причину скрытия");
+    showToast("Введите причину скрытия");
     return;
   }
 
@@ -991,7 +1009,7 @@ window.saveHideProductAd = async function() {
   const reason = document.getElementById("hideProductAdReasonInput").value.trim();
 
   if (!reason) {
-    alert("Введите причину скрытия");
+    showToast("Введите причину скрытия");
     return;
   }
 
@@ -1532,15 +1550,21 @@ function getUserRequestStatusText(status) {
   }
 }
 
-function logout() {
-  if (!confirm("Выйти из аккаунта?")) return;
+async function logout() {
+const ok = await showConfirm("Выйти из аккаунта?", {
+  title: "Выход",
+  confirmText: "Выйти",
+  cancelText: "Отмена",
+  danger: true
+});
 
+if (!ok) return;
   localStorage.removeItem("token");
   localStorage.removeItem("userId");
   localStorage.removeItem("username");
   localStorage.removeItem("role");
 
-  window.location.href = "loginpage2.html"; 
+  window.location.href = "loginpage.html"; 
 }
 
 let adminActivityChart = null;
@@ -1849,6 +1873,60 @@ function getAdminReportStatusText(status) {
     default: return "Неизвестно";
   }
 }
+
+function showConfirm(message, options = {}) {
+  return new Promise(resolve => {
+    const {
+      title = "Подтверждение",
+      confirmText = "Да",
+      cancelText = "Отмена",
+      danger = false
+    } = options;
+
+    const modal = document.createElement("div");
+
+    modal.className = "confirm-modal";
+
+    modal.innerHTML = `
+      <div class="confirm-overlay"></div>
+
+      <div class="confirm-box">
+        <h2>${title}</h2>
+
+        <p>${message}</p>
+
+        <div class="confirm-actions">
+          <button class="confirm-cancel">
+            ${cancelText}
+          </button>
+
+          <button class="confirm-ok ${danger ? "danger" : ""}">
+            ${confirmText}
+          </button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    modal.querySelector(".confirm-cancel").onclick = () => {
+      modal.remove();
+      resolve(false);
+    };
+
+    modal.querySelector(".confirm-overlay").onclick = () => {
+      modal.remove();
+      resolve(false);
+    };
+
+    modal.querySelector(".confirm-ok").onclick = () => {
+      modal.remove();
+      resolve(true);
+    };
+  });
+}
+
+window.showConfirm = showConfirm;
   handleAdminDeepLink();
 
 window.addEventListener("hashchange", handleAdminDeepLink);
