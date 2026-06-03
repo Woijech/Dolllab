@@ -1,4 +1,4 @@
-const API_NOTIFICATIONS = "https://localhost:7145/api/notifications";
+const API_NOTIFICATIONS = "/api/notifications";
 
 async function getNotifications() {
   const token = localStorage.getItem("token");

@@ -1,4 +1,4 @@
-const API_PROFILE = "https://localhost:7145/api/profile";
+const API_PROFILE = "/api/profile";
 
 // Мой профиль
 async function getMyProfile(token) {
@@ -103,7 +103,7 @@ async function loadUserAvatar() {
     const data = await getMyProfile(token);
     const profileAvatar = document.getElementById("profileAvatar");
     if (data && data.avatarUrl && profileAvatar) {
-      profileAvatar.src = `https://localhost:7145${data.avatarUrl}`;
+      profileAvatar.src = `${data.avatarUrl}`;
     }
   } catch (error) {
     console.error("Ошибка загрузки аватарки:", error);
@@ -113,7 +113,7 @@ async function loadUserAvatar() {
 async function toggleFollow(userId) {
   const token = localStorage.getItem("token");
 
-  const res = await fetch(`https://localhost:7145/api/profile/${userId}/follow`, {
+  const res = await fetch(`/api/profile/${userId}/follow`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`
@@ -129,7 +129,7 @@ async function toggleFollow(userId) {
 }
 
 async function getFollowers(userId) {
-  const res = await fetch(`https://localhost:7145/api/profile/${userId}/followers`);
+  const res = await fetch(`/api/profile/${userId}/followers`);
 
   if (!res.ok) {
     console.error("Ошибка загрузки подписчиков:", res.status, await res.text());
@@ -140,7 +140,7 @@ async function getFollowers(userId) {
 }
 
 async function getFollowing(userId) {
-  const res = await fetch(`https://localhost:7145/api/profile/${userId}/following`);
+  const res = await fetch(`/api/profile/${userId}/following`);
 
   if (!res.ok) {
     console.error("Ошибка загрузки подписок:", res.status, await res.text());

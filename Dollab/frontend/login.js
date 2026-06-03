@@ -1,5 +1,5 @@
 // app.js
-const API_URL = "https://localhost:7145"; // Замените на ваш реальный API URL
+const API_URL = ""; // Замените на ваш реальный API URL
 
 // Функция для переключения видимости пароля
 function togglePasswordVisibility() {

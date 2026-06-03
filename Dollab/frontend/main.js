@@ -1,4 +1,4 @@
-const API_URL = "https://localhost:7145";
+const API_URL = "";
 
 // ===== Проверка авторизации =====
 const token = localStorage.getItem("token");

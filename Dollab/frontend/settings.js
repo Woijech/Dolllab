@@ -1,7 +1,7 @@
 async function getUserTheme() {
   const token = localStorage.getItem("token");
 
-  const res = await fetch("https://localhost:7145/api/settings/theme", {
+  const res = await fetch("/api/settings/theme", {
     headers: {
       Authorization: `Bearer ${token}`
     }
@@ -57,7 +57,7 @@ async function loadProfilePrivacy() {
 async function updateProfilePrivacy(profileVisibility) {
   const token = localStorage.getItem("token");
 
-  const res = await fetch("https://localhost:7145/api/settings/profile-privacy", {
+  const res = await fetch("/api/settings/profile-privacy", {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -79,7 +79,7 @@ async function updateProfilePrivacy(profileVisibility) {
 async function acceptFollowRequest(requestId) {
   const token = localStorage.getItem("token");
 
-  return fetch(`https://localhost:7145/api/follow-requests/${requestId}/accept`, {
+  return fetch(`/api/follow-requests/${requestId}/accept`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` }
   });
@@ -88,7 +88,7 @@ async function acceptFollowRequest(requestId) {
 async function rejectFollowRequest(requestId) {
   const token = localStorage.getItem("token");
 
-  return fetch(`https://localhost:7145/api/follow-requests/${requestId}/reject`, {
+  return fetch(`/api/follow-requests/${requestId}/reject`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` }
   });

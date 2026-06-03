@@ -191,7 +191,7 @@ async function openPostModal(postId) {
     const modal = document.getElementById('postViewModal');
 
     document.getElementById('postModalImage').src = post.imageUrl
-      ? `https://localhost:7145${post.imageUrl}`
+      ? `${post.imageUrl}`
       : 'https://via.placeholder.com/600x800/FFE4F0/FF67A6?text=Пост';
 
     const username =
@@ -220,7 +220,7 @@ usernameEl.onclick = function(event) {
       post.avatarUrl;
 
     document.getElementById('postModalAvatar').src = avatarPath
-      ? `https://localhost:7145${avatarPath}`
+      ? `${avatarPath}`
       : '/icons/blank_pfp.jpg';
 
     document.getElementById('postModalDescription').textContent =
@@ -462,7 +462,7 @@ function openEditPostModal(postId, post) {
   
   const previewImg = document.getElementById('editPostPreviewImage');
   previewImg.src = post.imageUrl 
-    ? `https://localhost:7145${post.imageUrl}` 
+    ? `${post.imageUrl}` 
     : 'https://via.placeholder.com/400x400/FFE4F0/FF67A6?text=Пост';
   
   editModal.setAttribute('data-post-id', postId);
@@ -704,12 +704,12 @@ async function renderProfile() {
   profileData = data;
   
   if (profileAvatar && data.avatarUrl) {
-    profileAvatar.src = `https://localhost:7145${data.avatarUrl}`;
+    profileAvatar.src = `${data.avatarUrl}`;
   }
 
   const userData = {
     name: data.username || "Пользователь",
-    avatar: data.avatarUrl ? `https://localhost:7145${data.avatarUrl}` : "/icons/blank_pfp.jpg",
+    avatar: data.avatarUrl ? `${data.avatarUrl}` : "/icons/blank_pfp.jpg",
     description: data.bio || "Описание отсутствует",
     posts: data.postsCount || 0,
     followers: data.followersCount || 0,
@@ -892,7 +892,7 @@ document.body.insertAdjacentHTML("beforeend", editModalHTML);
     
     <img
       src="${post.imageUrl
-        ? `https://localhost:7145${post.imageUrl}`
+        ? `${post.imageUrl}`
         : 'https://via.placeholder.com/300x300/FFE4F0/FF67A6?text=Пост'}"
       alt="Пост"
     >
@@ -1032,7 +1032,7 @@ ${
             ads && ads.length > 0
               ? ads.map(ad => {
                   const imageUrl = ad.images && ad.images.length > 0
-                    ? `https://localhost:7145${ad.images[0]}`
+                    ? `${ad.images[0]}`
                     : "/icons/blank_pfp.jpg";
 
                   return `
@@ -1132,7 +1132,7 @@ ${
   if (favorites && favorites.length > 0) {
     profileGrid.innerHTML = favorites.map(post => `
       <div class="profile-grid-item">
-        <img src="${post.imageUrl ? `https://localhost:7145${post.imageUrl}` : 'https://via.placeholder.com/300x300/FFE4F0/FF67A6?text=Пост'}" alt="Пост">
+        <img src="${post.imageUrl ? `${post.imageUrl}` : 'https://via.placeholder.com/300x300/FFE4F0/FF67A6?text=Пост'}" alt="Пост">
 
         <div class="profile-grid-item-overlay" onclick="openPostModal('${post.id}')">
           <div class="post-card-likes" onclick="toggleLike(event, '${post.id}')">
@@ -1843,7 +1843,7 @@ async function renderUserSearchResults(query) {
             <div class="users-search-list">
               ${users.map(user => `
                 <div class="user-search-card" onclick="openUserProfile('${user.id}')">
-                  <img src="${user.avatarUrl ? `https://localhost:7145${user.avatarUrl}` : '/icons/blank_pfp.jpg'}" alt="Аватар">
+                  <img src="${user.avatarUrl ? `${user.avatarUrl}` : '/icons/blank_pfp.jpg'}" alt="Аватар">
                   <div>
                     <h3>${user.username}</h3>
                     <p>${user.bio || 'Описание отсутствует'}</p>
@@ -1861,7 +1861,7 @@ async function renderUserSearchResults(query) {
 <div class="interesting-search-posts-grid">              ${filteredPosts.map(post => `
                 <div class="interesting-search-post-card" onclick="openPostModal('${post.id}')">
                   <img 
-                    src="${post.imageUrl ? `https://localhost:7145${post.imageUrl}` : '/icons/blank_pfp.jpg'}" 
+                    src="${post.imageUrl ? `${post.imageUrl}` : '/icons/blank_pfp.jpg'}" 
                     alt="Пост"
                   >
 
@@ -1949,7 +1949,7 @@ window.openUserProfile = async function(userId) {
     <div class="profile">
       <div class="profile-header">
         <div class="profile-avatar-wrapper">
-          <img src="${user.avatarUrl ? `https://localhost:7145${user.avatarUrl}` : '/icons/blank_pfp.jpg'}" class="profile-avatar">
+          <img src="${user.avatarUrl ? `${user.avatarUrl}` : '/icons/blank_pfp.jpg'}" class="profile-avatar">
         </div>
 
         <div class="profile-info">
@@ -2017,7 +2017,7 @@ window.openUserProfile = async function(userId) {
           </div>
         ` : (user.posts || []).map(post => `
           <div class="profile-grid-item">
-            <img src="${post.imageUrl ? `https://localhost:7145${post.imageUrl}` : ''}">
+            <img src="${post.imageUrl ? `${post.imageUrl}` : ''}">
             <div class="profile-grid-item-overlay" onclick="openPostModal('${post.id}')">
               <div class="post-card-likes" onclick="toggleLike(event, '${post.id}')">
                 <img src="${post.isLiked ? '/icons/heart-filled.svg' : '/icons/heart.svg'}">
@@ -2174,7 +2174,7 @@ window.showOtherUserTab = async function(tab, event) {
       <div class="profile-grid" id="otherUserProfileGrid" data-user-id="${userId}">
         ${(user.posts || []).map(post => `
           <div class="profile-grid-item">
-            <img src="${post.imageUrl ? `https://localhost:7145${post.imageUrl}` : 'https://via.placeholder.com/300x300/FFE4F0/FF67A6?text=Пост'}" alt="Пост">
+            <img src="${post.imageUrl ? `${post.imageUrl}` : 'https://via.placeholder.com/300x300/FFE4F0/FF67A6?text=Пост'}" alt="Пост">
 
             <div class="profile-grid-item-overlay" onclick="openPostModal('${post.id}')">
               <div class="post-card-likes" onclick="toggleLike(event, '${post.id}')">
@@ -2251,7 +2251,7 @@ ${
               ads && ads.length > 0
                 ? ads.map(ad => {
                     const imageUrl = ad.images && ad.images.length > 0
-                      ? `https://localhost:7145${ad.images[0]}`
+                      ? `${ad.images[0]}`
                       : "/icons/blank_pfp.jpg";
 
                     return `
@@ -2383,7 +2383,7 @@ window.openFollowersModal = async function(userId) {
   } else {
     list.innerHTML = followers.map(user => `
       <div class="follower-item" onclick="closeFollowersModal(); openUserProfile('${user.id}')">
-        <img src="${user.avatarUrl ? `https://localhost:7145${user.avatarUrl}` : '/icons/blank_pfp.jpg'}" alt="Аватар">
+        <img src="${user.avatarUrl ? `${user.avatarUrl}` : '/icons/blank_pfp.jpg'}" alt="Аватар">
         <span>${user.username}</span>
       </div>
     `).join("");
@@ -2442,7 +2442,7 @@ window.openFollowingModal = async function(userId) {
   } else {
     list.innerHTML = following.map(user => `
       <div class="follower-item" onclick="closeFollowingModal(); openUserProfile('${user.id}')">
-        <img src="${user.avatarUrl ? `https://localhost:7145${user.avatarUrl}` : '/icons/blank_pfp.jpg'}" alt="Аватар">
+        <img src="${user.avatarUrl ? `${user.avatarUrl}` : '/icons/blank_pfp.jpg'}" alt="Аватар">
         <span>${user.username}</span>
       </div>
     `).join("");
@@ -2489,14 +2489,14 @@ async function renderHomeFeed() {
       ${posts.map(post => `
         <div class="feed-post">
           <div class="feed-post-header" onclick="openUserProfile('${post.user.id}')">
-            <img src="${post.user.avatarUrl ? `https://localhost:7145${post.user.avatarUrl}` : '/icons/blank_pfp.jpg'}" alt="Аватар">
+            <img src="${post.user.avatarUrl ? `${post.user.avatarUrl}` : '/icons/blank_pfp.jpg'}" alt="Аватар">
             <span>${post.user.username}</span>
             
           </div>
 <div class="feed-post-image-wrapper">
           <img 
             class="feed-post-image"
-            src="${post.imageUrl ? `https://localhost:7145${post.imageUrl}` : 'https://via.placeholder.com/500x500/FFE4F0/FF67A6?text=Пост'}"
+            src="${post.imageUrl ? `${post.imageUrl}` : 'https://via.placeholder.com/500x500/FFE4F0/FF67A6?text=Пост'}"
             alt="Пост"
           >
           </div>
@@ -2753,7 +2753,7 @@ contentArea.innerHTML = `
     ${posts.map(post => `
       <div class="interesting-post-card" onclick="openPostModal('${post.id}')">
         <img 
-          src="${post.imageUrl ? `https://localhost:7145${post.imageUrl}` : '/icons/blank_pfp.jpg'}" 
+          src="${post.imageUrl ? `${post.imageUrl}` : '/icons/blank_pfp.jpg'}" 
           alt="Пост"
         >
 
@@ -2863,7 +2863,7 @@ const ads = await getProductAds(shopFilters);
           ads && ads.length > 0
             ? ads.map(ad => {
                 const imageUrl = ad.images && ad.images.length > 0
-                  ? `https://localhost:7145${ad.images[0]}`
+                  ? `${ad.images[0]}`
                   : "/icons/blank_pfp.jpg";
 
                 return `
@@ -3167,7 +3167,7 @@ async function openProductAdModal(adId) {
   await refreshCartState();
 
   currentProductImages = ad.images && ad.images.length > 0
-    ? ad.images.map(img => `https://localhost:7145${img}`)
+    ? ad.images.map(img => `${img}`)
     : ["/icons/blank_pfp.jpg"];
 
   currentProductImageIndex = 0;
@@ -3586,7 +3586,7 @@ async function openCartModal() {
   } else {
     list.innerHTML = items.map(item => {
       const imageUrl = item.images && item.images.length > 0
-        ? `https://localhost:7145${item.images[0]}`
+        ? `${item.images[0]}`
         : "/icons/blank_pfp.jpg";
 
       return `
@@ -3854,7 +3854,7 @@ async function renderNotificationsPage() {
             ? notifications.map(n => `
               <div class="notification-card ${n.isRead ? "" : "unread"}" onclick="openNotification('${n.id}', '${n.postId || ""}', '${n.fromUserId}')">
                 <img
-                  src="${n.fromUserAvatar ? `https://localhost:7145${n.fromUserAvatar}` : '/icons/blank_pfp.jpg'}"
+                  src="${n.fromUserAvatar ? `${n.fromUserAvatar}` : '/icons/blank_pfp.jpg'}"
                   class="notification-avatar"
                   onclick="event.stopPropagation(); openUserProfile('${n.fromUserId}')"
                 >
@@ -4175,7 +4175,7 @@ window.openBlacklistModal = async function() {
   } else {
     list.innerHTML = users.map(user => `
       <div class="blacklist-item">
-        <img src="${user.avatarUrl ? `https://localhost:7145${user.avatarUrl}` : "/icons/blank_pfp.jpg"}" alt="Аватар">
+        <img src="${user.avatarUrl ? `${user.avatarUrl}` : "/icons/blank_pfp.jpg"}" alt="Аватар">
 
         <span>${user.username}</span>
 
@@ -4310,7 +4310,7 @@ list.innerHTML = reports.length > 0
           <div class="my-report-user">
             <img src="${
               report.reportedUser.avatarUrl
-                ? `https://localhost:7145${report.reportedUser.avatarUrl}`
+                ? `${report.reportedUser.avatarUrl}`
                 : "/icons/blank_pfp.jpg"
             }">
 
@@ -4775,7 +4775,7 @@ function renderCommentThread(comment, postId) {
 
 function renderCommentItem(comment, postId, isReply) {
   const avatar = comment.author?.avatarUrl
-    ? `https://localhost:7145${comment.author.avatarUrl}`
+    ? `${comment.author.avatarUrl}`
     : "/icons/blank_pfp.jpg";
 
   return `

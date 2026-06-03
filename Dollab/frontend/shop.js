@@ -1,4 +1,4 @@
-const API_PRODUCT_ADS = "https://localhost:7145/api/product-ads";
+const API_PRODUCT_ADS = "/api/product-ads";
 
 async function createProductAd(token, data) {
   try {
@@ -150,7 +150,7 @@ async function deleteProductAd(token, adId) {
   return await res.json();
 }
 
-const API_CART = "https://localhost:7145/api/cart";
+const API_CART = "/api/cart";
 
 async function getMyCart(token) {
   const res = await fetch(API_CART, {
@@ -216,7 +216,7 @@ async function clearCart(token) {
   return await res.json();
 }
 
-const API_REVIEWS = "https://localhost:7145/api/user-reviews";
+const API_REVIEWS = "/api/user-reviews";
 
 async function getUserReviews(userId) {
   const res = await fetch(`${API_REVIEWS}/user/${userId}`);

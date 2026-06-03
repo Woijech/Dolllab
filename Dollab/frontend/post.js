@@ -1,4 +1,4 @@
-const API_POSTS = "https://localhost:7145/api/post";
+const API_POSTS = "/api/post";
 
 // Получение моих постов
 async function getMyPosts(token) {
@@ -177,7 +177,7 @@ async function togglePostLike(token, postId) {
 async function searchUsers(query) {
   if (!query.trim()) return [];
 
-  const url = `https://localhost:7145/api/Profile/search?query=${encodeURIComponent(query)}`;
+  const url = `/api/Profile/search?query=${encodeURIComponent(query)}`;
 
   const res = await fetch(url);
 
@@ -192,7 +192,7 @@ async function searchUsers(query) {
 async function getUserProfile(userId) {
   const token = localStorage.getItem("token");
 
-  const res = await fetch(`https://localhost:7145/api/Profile/${userId}`, {
+  const res = await fetch(`/api/Profile/${userId}`, {
     headers: {
       Authorization: `Bearer ${token}`
     }

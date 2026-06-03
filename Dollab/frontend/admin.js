@@ -38,7 +38,7 @@ async function renderAdminDollopedia() {
             ? dolls.map(doll => `
               <div class="admin-doll-row">
                 <img
-                  src="${doll.imageUrl ? `https://localhost:7145${doll.imageUrl}` : "/icons/blank_pfp.jpg"}"
+                  src="${doll.imageUrl ? `${doll.imageUrl}` : "/icons/blank_pfp.jpg"}"
                   alt="${doll.name}"
                 >
 
@@ -452,7 +452,7 @@ async function renderAdminUsers() {
 <img
   src="${
     user.avatarUrl
-      ? `https://localhost:7145${user.avatarUrl}`
+      ? `${user.avatarUrl}`
       : '/icons/blank_pfp.jpg'
   }"
   class="admin-user-avatar"
@@ -1067,7 +1067,7 @@ async function renderAdminReports() {
                           class="admin-user-avatar"
                           src="${
                             report.reporter?.avatarUrl
-                              ? `https://localhost:7145${report.reporter.avatarUrl}`
+                              ? `${report.reporter.avatarUrl}`
                               : "/icons/blank_pfp.jpg"
                           }"
                         >
@@ -1282,7 +1282,7 @@ async function loadUserRequestsPreview() {
           <div class="admin-user-cell">
             <img src="${
               request.user?.avatarUrl
-                ? `https://localhost:7145${request.user.avatarUrl}`
+                ? `${request.user.avatarUrl}`
                 : "/icons/blank_pfp.jpg"
             }" alt="">
 
@@ -1350,7 +1350,7 @@ async function renderAdminUserRequests() {
                           class="admin-user-avatar"
                           src="${
                             request.user?.avatarUrl
-                              ? `https://localhost:7145${request.user.avatarUrl}`
+                              ? `${request.user.avatarUrl}`
                               : "/icons/blank_pfp.jpg"
                           }"
                         >
@@ -1707,7 +1707,7 @@ window.openUserReportsModal = async function(userId) {
             class="admin-user-avatar"
             src="${
               report.reporter?.avatarUrl
-                ? `https://localhost:7145${report.reporter.avatarUrl}`
+                ? `${report.reporter.avatarUrl}`
                 : "/icons/blank_pfp.jpg"
             }"
           >
@@ -1761,14 +1761,14 @@ window.openAdminPostViewModal = async function(postId) {
 
     <img
       class="admin-view-image"
-      src="${post.imageUrl ? `https://localhost:7145${post.imageUrl}` : "/icons/blank_pfp.jpg"}"
+      src="${post.imageUrl ? `${post.imageUrl}` : "/icons/blank_pfp.jpg"}"
       alt=""
     >
 
     <div class="admin-user-mini">
       <img
         class="admin-user-avatar"
-        src="${post.user?.avatarUrl ? `https://localhost:7145${post.user.avatarUrl}` : "/icons/blank_pfp.jpg"}"
+        src="${post.user?.avatarUrl ? `${post.user.avatarUrl}` : "/icons/blank_pfp.jpg"}"
       >
       <strong>${post.user?.username || "Пользователь"}</strong>
     </div>
@@ -1828,14 +1828,14 @@ window.openAdminProductAdViewModal = async function(adId) {
 
     <img
       class="admin-view-image"
-      src="${firstImage ? `https://localhost:7145${firstImage}` : "/icons/blank_pfp.jpg"}"
+      src="${firstImage ? `${firstImage}` : "/icons/blank_pfp.jpg"}"
       alt=""
     >
 
     <div class="admin-user-mini">
       <img
         class="admin-user-avatar"
-        src="${ad.user?.avatarUrl ? `https://localhost:7145${ad.user.avatarUrl}` : "/icons/blank_pfp.jpg"}"
+        src="${ad.user?.avatarUrl ? `${ad.user.avatarUrl}` : "/icons/blank_pfp.jpg"}"
       >
       <strong>${ad.user?.username || "Пользователь"}</strong>
     </div>
